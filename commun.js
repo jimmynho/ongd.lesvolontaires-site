@@ -88,20 +88,35 @@
     for (const el of attrs) Object.values(Trad.attrs.get(el) || {}).forEach(v => /\p{L}{2}/u.test(v) && cles.add(v.trim()));
     const manquantes = [...cles].filter(k => k && !(k in Trad.cache));
     const langue = Trad.langue;
-    for (let i = 0; i < manquantes.length; i += 100) {
-      try {
-        const d = await api('/traduire', { method: 'POST', body: JSON.stringify({ langue, textes: manquantes.slice(i, i + 100) }) });
-        Object.assign(Trad.cache, d.traductions);
-        if (!Object.keys(d.traductions).length && i === 0) toast('Traduction indisponible pour le moment' + (d.raison ? ' (' + d.raison + ')' : '') + '.', 7000);
-      } catch (e) { toast(e.message); break; }
+    const appliquer = () => {
+      if (langue !== Trad.langue) return;              // la langue a changé pendant le chargement
+      for (const n of textes) { const o = Trad.originaux.get(n), k = o.trim(); if (Trad.cache[k]) n.nodeValue = o.replace(k, Trad.cache[k]); }
+      for (const el of attrs) for (const [a, v] of Object.entries(Trad.attrs.get(el) || {})) if (Trad.cache[v.trim()]) el.setAttribute(a, Trad.cache[v.trim()]);
+    };
+    appliquer();                                         // ce qui est déjà traduit s'affiche tout de suite
+    if (!manquantes.length) return;
+    // Le haut de la page d'abord, par lots de 40, 3 lots en même temps ; chaque lot s'affiche dès qu'il arrive
+    const lots = []; for (let i = 0; i < manquantes.length; i += 40) lots.push(manquantes.slice(i, i + 40));
+    let faits = 0, raison = null, erreurReseau = null;
+    const grand = racine === document.body && manquantes.length > 40;
+    for (let i = 0; i < lots.length && langue === Trad.langue; i += 3) {
+      await Promise.all(lots.slice(i, i + 3).map(async lot => {
+        try {
+          const d = await api('/traduire', { method: 'POST', body: JSON.stringify({ langue, textes: lot }) });
+          Object.assign(Trad.cache, d.traductions);
+          if (!d.complet && d.raison) raison = d.raison;
+        } catch (e) { erreurReseau = e.message; }
+        faits += lot.length;
+      }));
+      appliquer();
+      if (grand && langue === Trad.langue) toast(`Traduction… ${Math.min(100, Math.round(faits / manquantes.length * 100))} %`, 4000);
+      if (erreurReseau) break;
     }
-    if (langue !== Trad.langue) return;               // la langue a changé pendant le chargement
     Trad.sauverCache();
-    for (const n of textes) {
-      const o = Trad.originaux.get(n), k = o.trim();
-      if (Trad.cache[k]) n.nodeValue = o.replace(k, Trad.cache[k]);
-    }
-    for (const el of attrs) for (const [a, v] of Object.entries(Trad.attrs.get(el) || {})) if (Trad.cache[v.trim()]) el.setAttribute(a, Trad.cache[v.trim()]);
+    const restants = manquantes.filter(k => !(k in Trad.cache)).length;
+    if (erreurReseau) toast(erreurReseau, 6000);
+    else if (restants && restants === manquantes.length) toast('Traduction indisponible pour le moment' + (raison ? ' (' + raison + ')' : '') + '.', 8000);
+    else if (grand) toast(restants ? 'Traduction presque complète : rechargez la page pour terminer.' : 'Page traduite.', 3000);
   }
   async function changerLangue(l) {
     Trad.langue = l; ecrire('ongd_langue', l); Trad.chargerCache();
@@ -168,6 +183,18 @@
     dessinerFil();
   };
 
+  /* ================= ÉQUIPE ABSENTE (congé, jour férié) ================= */
+  if (!/admin\.html$/.test(location.pathname)) api('/equipe').then(e => {
+    if (!e.absent) return;
+    const b = document.createElement('div');
+    b.className = 'bandeau-absence';
+    b.innerHTML = `<span>${e.raison && e.raison.startsWith('jour férié') ? 'Aujourd\'hui est un ' + esc(e.raison) : 'Notre équipe est absente'}${e.retour ? ' jusqu\'au ' + new Date(e.retour + 'T12:00').toLocaleDateString('fr-FR') : ''}.
+      ${e.ia ? 'Notre assistant répond à vos questions et à vos demandes.' : 'Laissez-nous un message, nous répondrons dès notre retour.'}${e.message ? ' ' + esc(e.message) : ''}</span>
+      ${e.ia ? '<button type="button" class="btn btn-petit btn-don">Poser une question</button>' : ''}`;
+    const btn = b.querySelector('button'); if (btn) btn.onclick = () => bouton.click();
+    document.body.prepend(b);
+  }).catch(() => {});
+
   /* ================= BANDEAU « EN DIRECT » ================= */
   if (!location.pathname.endsWith('direct.html')) {
     api('/directs').then(d => {
@@ -199,15 +226,15 @@
     if (reponse.payment_url) { toast('Redirection vers le paiement sécurisé…'); location.href = reponse.payment_url; return; }
     const comptes = ONGD.mobileMoney.filter(m => m.numero), b = ONGD.banque, wa = 'https://wa.me/' + ONGD.whatsapp;
     const lignes = comptes.map(m => `<li><strong>${esc(m.operateur)}</strong> : ${esc(m.numero)}</li>`);
-    if (b.compte) lignes.push(`<li><strong>Virement</strong> : ${esc(b.banque)}, compte ${esc(b.compte)}${b.swift ? ', SWIFT ' + esc(b.swift) : ''} (${esc(b.titulaire)})</li>`);
+    const vir = outils.virement(reponse.devise); if (vir) lignes.push(vir);
     if (!lignes.length) lignes.push(`<li>Écrivez-nous sur <a href="${wa}?text=${encodeURIComponent('Bonjour, je souhaite payer. Référence : ' + reponse.reference)}" target="_blank" rel="noopener">WhatsApp (${esc(ONGD.telephoneAffiche)})</a> : nous vous indiquons comment payer.</li>`);
-    const ops = [...comptes.map(m => m.operateur), ...(b.compte ? ['Virement bancaire'] : []), 'Autre'];
+    const ops = [...comptes.map(m => m.operateur), ...(vir ? ['Virement bancaire'] : []), 'Autre'];
     conteneur.innerHTML = `
       <div class="reception">
         <h3>Finalisez votre paiement</h3>
         ${reponse.info ? `<div class="alerte info">${esc(reponse.info)}</div>` : ''}
         <p>Votre référence :</p><span class="ref" data-no-tr>${esc(reponse.reference)}</span>
-        <p>Montant : <strong>${montant(reponse.montant, reponse.devise)}</strong>${comptes.length || b.compte ? ', à envoyer sur l\'un de ces comptes de l\'ONGD avec la référence :' : ''}</p>
+        <p>Montant : <strong>${montant(reponse.montant, reponse.devise)}</strong>${comptes.length || vir ? ', à envoyer sur l\'un de ces comptes de l\'ONGD avec la référence :' : ''}</p>
         <ul>${lignes.join('')}</ul>
         <form novalidate>
           <div class="deux">

@@ -151,6 +151,11 @@
             <li>Les dons sont comptabilisés à part de toute autre activité et servent aux actions de l'ONGD.</li>
             <li>Les activités financées sont publiées ici, avec photos.</li>
           </ul>
+          <div class="reception" id="autres-moyens" hidden style="margin-top:6px">
+            <h3>Donner directement</h3>
+            <ul id="liste-autres-moyens"></ul>
+            <p class="petit" style="margin:0">Indiquez « Don ONGD Les Volontaires » et votre nom. Pour un reçu, écrivez-nous à <span data-no-tr id="email-don"></span>.</p>
+          </div>
           <div id="statut-don" class="alerte" hidden></div>
         </div>
 
@@ -395,6 +400,11 @@ $('#liste-activites').onclick = e => {
 chargerActivites();
 
 /* ---------- Dons ---------- */
+(() => { // Mobile Money et virement bancaire toujours visibles
+  const l = [...ONGD.mobileMoney.filter(m => m.numero).map(m => `<li><strong>${esc(m.operateur)}</strong> : <span data-no-tr>${esc(m.numero)}</span></li>`),
+    outils.virement('USD'), outils.virement('CDF')].filter(Boolean);
+  if (l.length) { $('#liste-autres-moyens').innerHTML = l.join(''); $('#email-don').textContent = ONGD.email || ONGD.telephoneAffiche; $('#autres-moyens').hidden = false; }
+})();
 const PRESETS = { USD: [5, 10, 25, 50, 100, 250], CDF: [5000, 10000, 25000, 50000, 100000, 250000] };
 let devise = 'USD';
 function dessinerMontants() {
@@ -430,13 +440,13 @@ function afficherManuel(d) {
   $('#montant-manuel').textContent = montant(d.montant, d.devise);
   const lignes = comptes.map(m => `<li><strong>${esc(m.operateur)}</strong> : ${esc(m.numero)}</li>`);
   const b = ONGD.banque;
-  if (b.compte) lignes.push(`<li><strong>Virement</strong> : ${esc(b.banque)}, compte ${esc(b.compte)}${b.swift ? ', SWIFT ' + esc(b.swift) : ''} (${esc(b.titulaire)})</li>`);
+  const vir = outils.virement(d.devise); if (vir) lignes.push(vir);
   if (!lignes.length) {
     $('#consigne-manuel').innerHTML = `Montant de votre don : <strong>${montant(d.montant, d.devise)}</strong>.`;
     lignes.push(`<li>Écrivez-nous sur <a href="${wa}?text=${encodeURIComponent('Bonjour, je souhaite finaliser mon don. Référence : ' + d.reference)}" target="_blank" rel="noopener">WhatsApp (${esc(ONGD.telephoneAffiche)})</a> : nous vous indiquons comment envoyer votre don.</li>`);
   }
   $('#comptes-manuel').innerHTML = lignes.join('');
-  $('#decl-op').innerHTML = [...comptes.map(m => m.operateur), ...(b.compte ? ['Virement bancaire'] : []), 'Autre'].map(o => `<option>${esc(o)}</option>`).join('');
+  $('#decl-op').innerHTML = [...comptes.map(m => m.operateur), ...(vir ? ['Virement bancaire'] : []), 'Autre'].map(o => `<option>${esc(o)}</option>`).join('');
   if (d.info) message($('#msg-declarer'), d.info, 'info');
   $('#don-manuel').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }

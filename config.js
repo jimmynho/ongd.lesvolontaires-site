@@ -45,7 +45,14 @@ window.ONGD = {
     { operateur: 'Orange Money', numero: '0850171480' },
     { operateur: 'Airtel Money', numero: '' },          // bientôt disponible
   ],
-  banque: { banque: 'RAWBANK', titulaire: 'LES VOLONTAIRES', compte: '', swift: 'RAWBCDKI' }, // ⚠️ ajoutez le numéro de compte (USD) pour l'afficher
+  // Virement bancaire : un compte par devise (le donateur voit celui de la devise choisie)
+  banque: {
+    banque: 'RAWBANK', titulaire: 'LES VOLONTAIRES', agence: '05180', swift: 'RAWBCDKI',
+    comptes: {
+      USD: '05180-10072955101-72',   // ⚠️ à vérifier chiffre par chiffre avec la carte de la banque
+      CDF: '05180-10272955101-71',   // ⚠️ à vérifier chiffre par chiffre avec la carte de la banque
+    },
+  },
 
   // Projets que le donateur peut choisir (laisser vide [] pour masquer le choix)
   projets: [],
@@ -99,6 +106,12 @@ window.outils = {
       img.onerror = () => { URL.revokeObjectURL(url); ko(new Error('Cette image ne peut pas être lue.')); };
       img.src = url;
     });
+  },
+  // Ligne « virement bancaire » pour la devise du paiement ('' si aucun compte)
+  virement(devise) {
+    const b = ONGD.banque || {}, c = b.comptes || {}, n = c[devise] || '';
+    if (!n) return '';
+    return `<li><strong>Virement ${devise === 'USD' ? 'en dollars' : 'en francs congolais'}</strong> : ${outils.esc(b.banque)}, compte <span data-no-tr>${outils.esc(n)}</span>, titulaire ${outils.esc(b.titulaire)}${b.swift ? ', SWIFT <span data-no-tr>' + outils.esc(b.swift) + '</span>' : ''}</li>`;
   },
   // Affiche un message sous un formulaire
   message(el, texte, type = 'ok') { el.className = 'alerte ' + type; el.textContent = texte; el.hidden = false; },

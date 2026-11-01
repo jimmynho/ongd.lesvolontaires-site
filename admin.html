@@ -38,6 +38,7 @@
   </div>
 
   <div id="ecran-admin" hidden>
+    <div id="qui-admin" style="margin-bottom:10px"></div>
     <div class="onglets" id="onglets">
       <button data-o="activites" class="actif">À valider <span class="pastille" id="p-activites" hidden></span></button>
       <button data-o="publier">Publier</button>
@@ -52,6 +53,7 @@
       <button data-o="reglages">Réglages</button>
       <button data-o="fichiers">Fichiers <span class="pastille" id="p-achats" hidden></span></button>
       <button data-o="membres">Membres <span class="pastille" id="p-membres" hidden></span></button>
+      <button data-o="admins">Administrateurs</button>
       <button data-o="securite">Sécurité</button>
     </div>
     <div id="alerte-generale" class="alerte" hidden></div>
@@ -198,10 +200,40 @@
         <div id="forfaits-admin"></div>
         <div class="champ"><label>Informations pour l'assistant IA <span class="facultatif">(horaires, projets en cours, réponses aux questions fréquentes…)</span></label><textarea name="infos_ia" rows="7"></textarea></div>
         <label class="case" style="margin-bottom:14px"><input type="checkbox" name="reponses_auto"> Réponses automatiques par l'IA (messages, partenariats, dialogue)</label>
+        <div class="carte" style="margin-bottom:14px">
+          <h3>Absences et jours fériés</h3>
+          <p class="petit">Pendant une absence ou un jour férié, l'assistant IA répond à toutes les demandes (messages, partenariats, dialogue, bulle d'aide) et un bandeau le signale sur le site. Les jours fériés de la RDC sont déjà connus : 1er, 4, 16 et 17 janvier, 6 avril, 1er et 17 mai, 30 juin, 1er et 2 août, 25 décembre.</p>
+          <label class="case" style="margin-bottom:10px"><input type="checkbox" name="absence_actif"> L'équipe est absente (congé)</label>
+          <div class="deux">
+            <div class="champ"><label>Jusqu'au <span class="facultatif">(inclus)</span></label><input name="absence_jusqu" type="date"></div>
+            <div class="champ"><label>Message de l'équipe <span class="facultatif">(facultatif)</span></label><input name="absence_message" maxlength="500" placeholder="ex. Nous sommes en mission à Bikoro."></div>
+          </div>
+          <div class="champ"><label>Autres jours fériés <span class="facultatif">(un par ligne, AAAA-MM-JJ)</span></label><textarea name="jours_feries_supp" style="min-height:60px"></textarea></div>
+        </div>
         <div class="champ"><label>Mots interdits dans le dialogue <span class="facultatif">(séparés par des virgules)</span></label><textarea name="mots_interdits" style="min-height:70px"></textarea></div>
         <button class="btn btn-vert" style="width:100%">Enregistrer les réglages</button>
         <div class="alerte" hidden></div>
       </form>
+    </section>
+
+    <!-- Administrateurs secondaires -->
+    <section class="boite" data-panneau="admins" hidden style="padding:22px">
+      <p class="petit">Seul l'administrateur principal voit cet onglet, les réglages et la sécurité. Chaque administrateur secondaire ne voit que les parties de ses charges.</p>
+      <form id="form-admin" class="carte" novalidate style="margin-bottom:16px">
+        <h3>Ajouter un administrateur secondaire</h3>
+        <div class="deux">
+          <div class="champ"><label>Nom complet</label><input name="nom" required></div>
+          <div class="champ"><label>Téléphone (sert d'identifiant)</label><input name="telephone" type="tel" required placeholder="+243…"></div>
+          <div class="champ"><label>Charge</label><select name="charge_type"></select></div>
+          <div class="champ" id="champ-charge-libre" hidden><label>Nom de la charge</label><input name="charge_libre" placeholder="ex. Chargé(e) de communication"></div>
+          <div class="champ"><label>Mot de passe (8 caractères minimum)</label><input name="mdp" type="text" autocomplete="off" required></div>
+        </div>
+        <label>Parties de l'administration autorisées</label>
+        <div id="cases-admin" style="margin-bottom:12px"></div>
+        <button class="btn btn-vert" style="width:100%">Ajouter</button>
+        <div class="alerte" hidden></div>
+      </form>
+      <div id="liste-admins"></div>
     </section>
 
     <!-- Fichiers payants -->
@@ -308,7 +340,7 @@ $('#onglets').onclick = e => {
   charger();
 };
 function charger() { resume(); ({ activites: chargerAct, volontaires: chargerVol, dons: chargerDons, messages: chargerMsg, formations: chargerProg, boutique: chargerBoutique,
-  annonces: chargerAnnonces, dialogue: chargerSujets, direct: chargerDirects, reglages: chargerReglages, securite: chargerSecurite, fichiers: chargerFichiers, membres: chargerMembres }[onglet] || (() => {}))(); }
+  annonces: chargerAnnonces, dialogue: chargerSujets, direct: chargerDirects, reglages: chargerReglages, securite: chargerSecurite, fichiers: chargerFichiers, membres: chargerMembres, admins: chargerAdmins }[onglet] || (() => {}))(); }
 
 async function resume() {
   try {
@@ -733,6 +765,7 @@ async function chargerReglages() {
     $('#etat-services').innerHTML = `Assistant IA : <strong>${ia ? 'actif' : 'inactif (ajoutez ANTHROPIC_API_KEY dans Railway)'}</strong> · Paiement en ligne CinetPay : <strong>${paiement_en_ligne ? 'actif' : 'inactif'}</strong>`;
     const f = $('#form-reglages');
     f.taux_cdf.value = r.taux_cdf; for (const k of ['prix_document_usd', 'prix_video_usd', 'cotisation_honneur_usd', 'cotisation_vip_usd']) f[k].value = r[k]; f.infos_ia.value = r.infos_ia || ''; f.reponses_auto.checked = !!r.reponses_auto; f.mots_interdits.value = (r.mots_interdits || []).join(', ');
+    const ab = r.absence || {}; f.absence_actif.checked = !!ab.actif; f.absence_jusqu.value = ab.jusqu || ''; f.absence_message.value = ab.message || ''; f.jours_feries_supp.value = (r.jours_feries_supp || []).join('\n');
     const fo = [...r.forfaits_annonces]; while (fo.length < 3) fo.push({ jours: '', prix_usd: '' });
     $('#forfaits-admin').innerHTML = fo.map(x => `<div class="deux" data-forfait><div class="champ"><input type="number" min="1" data-j value="${x.jours}" placeholder="jours"></div>
       <div class="champ"><input type="number" min="1" data-p value="${x.prix_usd}" placeholder="prix en $"></div></div>`).join('');
@@ -745,6 +778,7 @@ $('#form-reglages').onsubmit = async e => {
     const d = await A('/admin/reglages', { method: 'PATCH', body: JSON.stringify({ taux_cdf: f.taux_cdf.value, prix_document_usd: f.prix_document_usd.value, prix_video_usd: f.prix_video_usd.value,
       cotisation_honneur_usd: f.cotisation_honneur_usd.value, cotisation_vip_usd: f.cotisation_vip_usd.value, infos_ia: f.infos_ia.value, reponses_auto: f.reponses_auto.checked,
       mots_interdits: f.mots_interdits.value,
+      absence: { actif: f.absence_actif.checked, jusqu: f.absence_jusqu.value, message: f.absence_message.value }, jours_feries_supp: f.jours_feries_supp.value,
       forfaits_annonces: [...document.querySelectorAll('[data-forfait]')].map(x => ({ jours: x.querySelector('[data-j]').value, prix_usd: x.querySelector('[data-p]').value })).filter(x => x.jours && x.prix_usd) }) });
     message(msg, d.message, 'ok');
   } catch (err) { if (err.status === 401) erreur(err); else message(msg, err.message, 'erreur'); }
@@ -950,7 +984,94 @@ $('#btn-diagnostic').onclick = async () => {
     z.innerHTML = Object.keys(L).map(k => `<div class="alerte ${d[k].ok ? 'ok' : 'erreur'}">${d[k].ok ? '✓' : '✗'} <strong>${L[k]}</strong> : ${esc(d[k].detail || '')}</div>`).join('');
   } catch (e) { erreur(e); z.innerHTML = ''; }
 };
-function demarrer() { montrer(true); charger(); }
+/* ================= Rôles : administrateur principal et secondaires ================= */
+const ONGLET_SECTION = { activites: 'activites', publier: 'activites', volontaires: 'volontaires', dons: 'dons', messages: 'messages', formations: 'formations',
+  boutique: 'boutique', annonces: 'annonces', dialogue: 'dialogue', direct: 'direct', fichiers: 'fichiers', membres: 'membres' };
+let moiAdmin = null;
+async function appliquerRoles() {
+  try { moiAdmin = await A('/admin/moi'); } catch (e) { erreur(e); return; }
+  const ok = o => moiAdmin.principal || (ONGLET_SECTION[o] && moiAdmin.permissions.includes(ONGLET_SECTION[o]));
+  let premier = null;
+  document.querySelectorAll('#onglets button').forEach(b => { const v = ok(b.dataset.o); b.hidden = !v; if (v && !premier) premier = b; });
+  $('#qui-admin').innerHTML = moiAdmin.principal ? '<span class="etiquette or">Administrateur principal</span>'
+    : `<span class="etiquette">${esc(moiAdmin.nom)}${moiAdmin.charge ? ' — ' + esc(moiAdmin.charge) : ''}</span>`;
+  if (!ok(onglet) && premier) premier.click(); else charger();
+}
+
+const CHARGES = {
+  'Chargé(e) de média et publications': ['activites', 'fichiers', 'annonces', 'direct', 'dialogue'],
+  'Chargé(e) des partenariats': ['messages', 'membres'],
+  'Chargé(e) des contacts': ['messages', 'dialogue'],
+  "Chargé(e) de l'emploi et des recrutements": ['volontaires', 'formations'],
+  'Chargé(e) des finances': ['dons', 'boutique', 'fichiers', 'membres'],
+  'Autre': [],
+};
+let sectionsAdmin = {}, adminsListe = [];
+function casesSections(choisies, nom) {
+  return Object.entries(sectionsAdmin).map(([k, v]) => `<label class="case" style="margin:4px 0"><input type="checkbox" name="${nom}" value="${k}" ${choisies.includes(k) ? 'checked' : ''}> ${esc(v)}</label>`).join('');
+}
+async function chargerAdmins() {
+  try {
+    const d = await A('/admin/admins');
+    sectionsAdmin = d.sections; adminsListe = d.admins;
+    const f = $('#form-admin');
+    if (!f.dataset.pret) {
+      f.charge_type.innerHTML = Object.keys(CHARGES).map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+      f.dataset.pret = '1';
+      f.charge_type.onchange = () => { $('#champ-charge-libre').hidden = f.charge_type.value !== 'Autre'; $('#cases-admin').innerHTML = casesSections(CHARGES[f.charge_type.value] || [], 'perm'); };
+      f.charge_type.onchange();
+    }
+    $('#liste-admins').innerHTML = adminsListe.map(a => `<div class="ligne-item" data-ad="${a.id}">
+      ${a.statut === 'actif' ? '<span class="statut">Actif</span>' : '<span class="statut suspendu">Suspendu</span>'}
+      <strong>${esc(a.nom)}</strong> <span class="petit">+${esc(a.telephone)}${a.charge ? ' · ' + esc(a.charge) : ''}${a.derniere_connexion ? ' · dernière connexion ' + heure(a.derniere_connexion) : ' · jamais connecté'}</span>
+      <div class="etiquettes">${a.permissions.map(p => `<span class="etiquette">${esc(sectionsAdmin[p] || p)}</span>`).join('')}</div>
+      <div class="actions">
+        <button class="btn btn-contour btn-petit" data-ada="charges">Modifier les charges</button>
+        <button class="btn btn-contour btn-petit" data-ada="mdp">Changer le mot de passe</button>
+        <button class="btn btn-contour btn-petit" data-ada="statut">${a.statut === 'actif' ? 'Suspendre' : 'Réactiver'}</button>
+        <button class="btn btn-contour btn-petit" data-ada="supprimer" style="color:var(--rouge)">Supprimer</button>
+      </div>
+      <form class="form-charges carte" hidden style="margin-top:10px" novalidate>
+        <div class="champ"><label>Charge</label><input name="charge" value="${esc(a.charge || '')}"></div>
+        ${casesSections(a.permissions, 'perm')}
+        <button class="btn btn-vert btn-petit" style="margin-top:8px">Enregistrer</button>
+      </form>
+    </div>`).join('') || '<p class="petit">Aucun administrateur secondaire.</p>';
+    $('#liste-admins').querySelectorAll('.form-charges').forEach(fc => fc.onsubmit = async e => {
+      e.preventDefault();
+      const id = fc.closest('[data-ad]').dataset.ad;
+      try { const r = await A('/admin/admins/' + id, { method: 'PATCH', body: JSON.stringify({ charge: fc.charge.value,
+        permissions: [...fc.querySelectorAll('[name=perm]:checked')].map(x => x.value) }) }); commun_toast(r.message); chargerAdmins(); } catch (err) { erreur(err); }
+    });
+  } catch (e) { erreur(e); }
+}
+$('#liste-admins').onclick = async e => {
+  const b = e.target.closest('[data-ada]'); if (!b) return;
+  const el = b.closest('[data-ad]'), a = adminsListe.find(x => x.id == el.dataset.ad);
+  try {
+    if (b.dataset.ada === 'charges') { const fc = el.querySelector('.form-charges'); fc.hidden = !fc.hidden; return; }
+    if (b.dataset.ada === 'mdp') {
+      const m = prompt('Nouveau mot de passe pour ' + a.nom + ' (8 caractères minimum) :'); if (!m) return;
+      const r = await A('/admin/admins/' + a.id, { method: 'PATCH', body: JSON.stringify({ mot_de_passe: m }) }); commun_toast(r.message);
+    }
+    if (b.dataset.ada === 'statut') await A('/admin/admins/' + a.id, { method: 'PATCH', body: JSON.stringify({ statut: a.statut === 'actif' ? 'suspendu' : 'actif' }) });
+    if (b.dataset.ada === 'supprimer') { if (!confirm('Supprimer définitivement ' + a.nom + ' ?')) return; const r = await A('/admin/admins/' + a.id, { method: 'DELETE' }); commun_toast(r.message); }
+    chargerAdmins();
+  } catch (err) { erreur(err); }
+};
+$('#form-admin').onsubmit = async e => {
+  e.preventDefault();
+  const f = e.target, msg = f.querySelector('.alerte'), btn = f.querySelector('button'); msg.hidden = true; btn.disabled = true;
+  try {
+    const d = await A('/admin/admins', { method: 'POST', body: JSON.stringify({ nom: f.nom.value, telephone: f.telephone.value,
+      charge: f.charge_type.value === 'Autre' ? f.charge_libre.value : f.charge_type.value, mot_de_passe: f.mdp.value,
+      permissions: [...f.querySelectorAll('[name=perm]:checked')].map(x => x.value) }) });
+    message(msg, d.message, 'ok'); f.nom.value = f.telephone.value = f.mdp.value = f.charge_libre.value = ''; chargerAdmins();
+  } catch (err) { if (err.status === 401) erreur(err); else message(msg, err.message, 'erreur'); }
+  btn.disabled = false;
+};
+
+function demarrer() { montrer(true); appliquerRoles(); }
 if (token) demarrer(); else montrer(false);
 </script>
 </body>

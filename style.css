@@ -272,3 +272,4 @@ input:focus, select:focus, textarea:focus { outline: 3px solid rgba(229,154,47,.
 .affiche { display: block; margin-top: 28px; border-radius: var(--rayon); overflow: hidden; box-shadow: var(--ombre); text-decoration: none; position: relative; }
 .affiche img { width: 100%; height: auto; }
 .affiche span { position: absolute; right: 12px; bottom: 12px; background: rgba(16,57,42,.88); color: #fff; padding: 8px 14px; border-radius: 99px; font-weight: 700; font-size: .9rem; }
+.bandeau-absence { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; background: #fdf1de; color: #6b4410; padding: 9px 16px; font-size: .93rem; font-weight: 600; text-align: center; border-bottom: 1px solid #f1d3a3; }
