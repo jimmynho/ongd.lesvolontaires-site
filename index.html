@@ -86,6 +86,7 @@
         <h2>Une ONGD portée par ses volontaires</h2>
         <p class="intro" id="txt-mission-2"></p>
         <p>Nos volontaires mènent les actions sur le terrain et en rendent compte ici, avec photos, pour que chaque donateur et chaque partenaire voie le travail accompli.</p>
+        <img src="bienvenue.jpg" alt="Bienvenue chez les Volontaires : notre organisation vous ouvre ses portes" width="755" height="1024" loading="lazy" style="width:100%;max-width:420px;height:auto;border-radius:14px;margin-top:10px;box-shadow:var(--ombre)">
       </div>
       <div class="siege">
         <img src="logo-officiel.jpg" alt="Logo officiel de l'ONGD Les Volontaires" width="1024" height="1024" loading="lazy" style="width:100%;max-width:280px;height:auto;border-radius:12px;margin:0 auto 18px">
@@ -96,8 +97,15 @@
         </dl>
       </div>
     </div>
-    <div class="conteneur" style="margin-top:36px">
-      <div class="grille-3" id="domaines"></div>
+    <div class="conteneur" style="margin-top:44px" id="domaines-intervention">
+      <span class="sur-titre">Nos domaines d'intervention</span>
+      <h2>12 domaines, l'électricité au cœur</h2>
+      <p class="intro">L'électricité éclaire tout le reste : l'école, la santé, l'entreprise, l'eau et l'innovation. C'est le centre de notre action.</p>
+      <div class="grille-3" id="domaines" style="margin-top:22px"></div>
+      <a class="affiche" href="affiche-ongd.jpg" target="_blank" rel="noopener">
+        <img src="affiche-ongd.jpg" alt="Affiche des 12 domaines d'intervention de l'ONGD Les Volontaires" width="2289" height="1024" loading="lazy">
+        <span>Voir l'affiche en grand</span>
+      </a>
     </div>
   </section>
 
@@ -337,7 +345,7 @@ $('#lien-wa').href = wa; $('#lien-wa').textContent = ONGD.telephoneAffiche; $('#
 if (ONGD.email) { $('#dt-email').hidden = $('#dd-email').hidden = false; $('#dd-email').innerHTML = `<a href="mailto:${esc(ONGD.email)}">${esc(ONGD.email)}</a>`; }
 if (ONGD.facebook) { $('#lien-fb').hidden = false; $('#lien-fb a').href = ONGD.facebook; }
 $('#lien-plaquette').href = ONGD.plaquette;
-$('#domaines').innerHTML = ONGD.domaines.map(d => `<div class="carte domaine"><h3>${esc(d.titre)}</h3><p>${esc(d.texte)}</p></div>`).join('');
+$('#domaines').innerHTML = ONGD.domaines.map((d, i) => `<div class="carte domaine${d.centre ? ' centre' : ''}"><span class="num-domaine">${String(i + 1).padStart(2, '0')}</span>${d.centre ? '<span class="etiquette or">Au cœur de notre action</span>' : ''}<h3>${esc(d.titre)}</h3><p>${esc(d.texte)}</p></div>`).join('');
 
 /* ---------- Menu mobile ---------- */
 $('#burger').onclick = () => { const o = $('#tiroir').classList.toggle('ouvert'); $('#burger').setAttribute('aria-expanded', o); };

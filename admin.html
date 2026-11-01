@@ -180,6 +180,12 @@
     <!-- Réglages -->
     <section class="boite etroit" data-panneau="reglages" hidden style="padding:22px">
       <p id="etat-services" class="petit"></p>
+      <div class="carte" style="margin-bottom:16px">
+        <h3>État du serveur</h3>
+        <p class="petit">Vérifie l'assistant IA (et la traduction), le stockage des fichiers et le paiement en ligne.</p>
+        <button class="btn btn-contour btn-petit" id="btn-diagnostic">Vérifier maintenant</button>
+        <div id="diagnostic" style="margin-top:10px"></div>
+      </div>
       <form id="form-reglages" novalidate>
         <div class="champ"><label>Taux du jour : 1 $ = … FC</label><input name="taux_cdf" type="number" min="100" step="1"></div>
         <div class="deux">
@@ -936,6 +942,14 @@ $('#form-consultation').onsubmit = async e => {
 };
 $('#btn-csv-cotisations').onclick = () => telecharger('/admin/cotisations.csv', 'cotisations-membres.csv');
 
+$('#btn-diagnostic').onclick = async () => {
+  const z = $('#diagnostic'); z.innerHTML = '<p class="petit">Vérification…</p>';
+  try {
+    const d = await A('/admin/diagnostic');
+    const L = { ia: 'Assistant IA et traduction', stockage: 'Stockage des fichiers (Backblaze)', paiement: 'Paiement en ligne (CinetPay)' };
+    z.innerHTML = Object.keys(L).map(k => `<div class="alerte ${d[k].ok ? 'ok' : 'erreur'}">${d[k].ok ? '✓' : '✗'} <strong>${L[k]}</strong> : ${esc(d[k].detail || '')}</div>`).join('');
+  } catch (e) { erreur(e); z.innerHTML = ''; }
+};
 function demarrer() { montrer(true); charger(); }
 if (token) demarrer(); else montrer(false);
 </script>

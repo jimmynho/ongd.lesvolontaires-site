@@ -264,3 +264,11 @@ input:focus, select:focus, textarea:focus { outline: 3px solid rgba(229,154,47,.
 .menu a, .marque span, .menu .btn { white-space: nowrap; }
 @media (min-width: 1360px) { .menu { gap: 0; } .menu a { padding: 8px 7px; font-size: .92rem; } .menu .btn { padding: 0 14px; } }
 @media (min-width: 1360px) { .entete .conteneur { max-width: 1320px; } }
+/* 12 domaines d'intervention */
+.num-domaine { display: block; font: 600 1.5rem/1 var(--titre); color: var(--soleil); margin-bottom: 8px; }
+.domaine.centre { grid-column: 1 / -1; order: -1; background: var(--vert-fonce); color: #e9f0ea; border-top-color: var(--soleil); }
+.domaine.centre h3 { color: #fff; font-size: 1.5rem; margin-top: 10px; }
+.domaine.centre p { color: #d7e2d9; font-size: 1.05rem; }
+.affiche { display: block; margin-top: 28px; border-radius: var(--rayon); overflow: hidden; box-shadow: var(--ombre); text-decoration: none; position: relative; }
+.affiche img { width: 100%; height: auto; }
+.affiche span { position: absolute; right: 12px; bottom: 12px; background: rgba(16,57,42,.88); color: #fff; padding: 8px 14px; border-radius: 99px; font-weight: 700; font-size: .9rem; }

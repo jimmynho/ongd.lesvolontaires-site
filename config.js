@@ -2,39 +2,50 @@
    ONGD Les Volontaires — RÉGLAGES DU SITE
    Modifiez seulement les textes entre guillemets ci-dessous.
    ===================================================================== */
+// Toujours en connexion sécurisée (cadenas) : http:// → https://
+if (location.protocol === 'http:' && !/^(localhost|127\.|192\.168\.)/.test(location.hostname)) location.replace('https://' + location.host + location.pathname + location.search + location.hash);
+
 window.ONGD = {
   nom: 'ONGD Les Volontaires',
 
   // Adresse du serveur Eaji (Railway) — ne pas changer sauf si le serveur change
   api: 'https://eajimmy-production.up.railway.app/api/ongd',
 
-  slogan: 'Agir ensemble, là où on a besoin de nous.',
+  slogan: 'Ensemble, nous pouvons transformer notre société !',
 
-  // ⚠️ À RELIRE ET ADAPTER : texte de présentation de l'ONGD
-  mission: "L'ONGD Les Volontaires rassemble des femmes et des hommes qui donnent de leur temps et de leurs compétences pour améliorer la vie des communautés, à Mbandaka, dans la province de l'Équateur et au-delà.",
+  // Texte de présentation de l'ONGD (vision)
+  mission: "Notre vision est de former, autonomiser et inspirer à travers l'éducation et l'électricité pour un avenir durable et équitable. Ensemble, éclairons les communautés et construisons un monde meilleur.",
 
-  // ⚠️ À ADAPTER : vos domaines d'action réels
+  // Les 12 domaines d'intervention. « centre: true » = mis en avant (l'électricité, au cœur de notre action)
   domaines: [
-    { titre: 'Solidarité', texte: 'Aide aux familles vulnérables, aux personnes âgées et aux enfants.' },
-    { titre: 'Éducation', texte: 'Soutien scolaire, sensibilisation et formation des jeunes.' },
-    { titre: 'Santé et hygiène', texte: "Campagnes de sensibilisation, assainissement et accès à l'eau." },
-    { titre: 'Environnement', texte: 'Salubrité des quartiers et protection de notre environnement.' },
+    { titre: 'Village des volontaires pour la jeunesse technologique', texte: "Former les jeunes aux métiers du numérique et de l'innovation, espaces de co-working et d'incubation, ateliers pratiques et hackathons, préparer la jeunesse aux défis du futur." },
+    { titre: "Création d'entreprises locales", texte: "Charpenterie, mécanique, apprentissage de la robotique et de l'intelligence artificielle, tournage et forge écologique, accompagnement, formation, accès au financement, mise en réseau et mentorat." },
+    { titre: "Festivals d'innovation", texte: "Célébrer la créativité, la technologie et l'innovation : concours de projets, expositions et démonstrations, conférences et panels, réseautage et opportunités." },
+    { titre: 'Mobilisation de financements', texte: "Lever des fonds pour les projets de développement : partenariats public-privé, fonds d'investissement, crowdfunding et mécénat, gestion transparente." },
+    { titre: 'Plaidoyer pour les démunis', texte: "Défendre les droits des plus vulnérables, lutter contre la pauvreté, promouvoir l'inclusion sociale et l'égalité des chances, sensibilisation et mobilisation citoyenne." },
+    { titre: 'Solutions sociales concrètes et construction', texte: "Construction d'une école de qualité, d'un centre de formation et d'apprentissage, et d'un espace d'encadrement socio-économique." },
+    { titre: 'Interpellation des autorités', texte: "Interpeller les autorités et les décideurs pour des politiques publiques justes et efficaces : dialogue citoyen, suivi des engagements, transparence, redevabilité et gouvernance participative." },
+    { titre: 'Valorisation des talents et paysages du développement', texte: "Promouvoir nos talents locaux, les arts, la culture et la créativité, le tourisme durable, la beauté de nos paysages, la fierté et l'identité locale." },
+    { titre: "Promotion de l'épargne", texte: "Encourager la culture de l'épargne, éducation financière pour tous, comptes d'épargne accessibles, investir dans son avenir et sécuriser ses projets de vie." },
+    { titre: "L'eau et l'électricité", centre: true, texte: "Accès à l'eau potable pour tous, forages et adduction d'eau, accès à l'électricité, énergies renouvelables (solaire, hydro, éolien), entretien et modernisation des infrastructures." },
+    { titre: 'Coopération internationale', texte: "Travailler avec nos partenaires internationaux : partage d'expertise et de ressources, échanges de bonnes pratiques, financements et dons, projets communs pour un développement durable." },
+    { titre: 'Santé et éducation', texte: "Investir dans la santé pour tous, construire des écoles et des centres de formation, accès aux soins de qualité, éducation de qualité, prévention et bien-être." },
   ],
 
   siege: "Avenue Mobutu, Mbandaka, province de l'Équateur, RD Congo",
   whatsapp: '243850171480',            // numéro WhatsApp sans le +
-  telephoneAffiche: '+243 850 171 480',
-  email: '',                            // ex. 'lesvolontaires@eaji.org' (laisser vide pour masquer)
+  telephoneAffiche: '+243 850 171 480 / +243 823 239 572',
+  email: 'lesvolontaires13@gmail.com',
   facebook: '',                         // lien de la page Facebook (laisser vide pour masquer)
 
   // Dons manuels (affichés si le paiement en ligne n'est pas disponible).
   // Remplissez les numéros Mobile Money AU NOM DE L'ONGD ; une ligne vide est masquée.
   mobileMoney: [
-    { operateur: 'M-Pesa', numero: '' },
-    { operateur: 'Orange Money', numero: '' },
-    { operateur: 'Airtel Money', numero: '' },
+    { operateur: 'M-Pesa', numero: '0823239572' },
+    { operateur: 'Orange Money', numero: '0850171480' },
+    { operateur: 'Airtel Money', numero: '' },          // bientôt disponible
   ],
-  banque: { banque: '', titulaire: 'ONGD Les Volontaires', compte: '', swift: '' },
+  banque: { banque: 'RAWBANK', titulaire: 'LES VOLONTAIRES', compte: '', swift: 'RAWBCDKI' }, // ⚠️ ajoutez le numéro de compte (USD) pour l'afficher
 
   // Projets que le donateur peut choisir (laisser vide [] pour masquer le choix)
   projets: [],

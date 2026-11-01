@@ -92,7 +92,7 @@
       try {
         const d = await api('/traduire', { method: 'POST', body: JSON.stringify({ langue, textes: manquantes.slice(i, i + 100) }) });
         Object.assign(Trad.cache, d.traductions);
-        if (!Object.keys(d.traductions).length && i === 0) toast('La traduction n\'est pas disponible pour le moment.');
+        if (!Object.keys(d.traductions).length && i === 0) toast('Traduction indisponible pour le moment' + (d.raison ? ' (' + d.raison + ')' : '') + '.', 7000);
       } catch (e) { toast(e.message); break; }
     }
     if (langue !== Trad.langue) return;               // la langue a changé pendant le chargement
