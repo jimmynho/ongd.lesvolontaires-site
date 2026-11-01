@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="ONGD Les Volontaires">
+  <circle cx="32" cy="32" r="31" fill="#1d5b3e"/>
+  <path d="M10 40a22 22 0 0 1 44 0" fill="none" stroke="#e59a2f" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="20" cy="30" r="4.2" fill="#faf6ee"/>
+  <circle cx="32" cy="24" r="4.8" fill="#faf6ee"/>
+  <circle cx="44" cy="30" r="4.2" fill="#faf6ee"/>
+  <path d="M13 50c0-7 3.2-11 7-11s7 4 7 11z" fill="#faf6ee"/>
+  <path d="M24 50c0-9 3.6-14 8-14s8 5 8 14z" fill="#faf6ee"/>
+  <path d="M37 50c0-7 3.2-11 7-11s7 4 7 11z" fill="#faf6ee"/>
+</svg>

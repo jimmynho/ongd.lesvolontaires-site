@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://eajimmy-production.up.railway.app; connect-src 'self' https://eajimmy-production.up.railway.app; frame-src https://www.youtube.com https://www.youtube-nocookie.com; base-uri 'self'; form-action 'self'; object-src 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Espace volontaire — ONGD Les Volontaires</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#10392a">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+</head>
+<body class="page-outil">
+<header class="entete">
+  <div class="conteneur">
+    <a class="marque" href="./"><img src="logo.svg" alt=""><span><small>Espace</small>Volontaire</span></a>
+    <button class="btn btn-contour btn-petit" id="btn-sortir" hidden>Se déconnecter</button>
+  </div>
+</header>
+
+<main class="conteneur etroit">
+  <!-- Connexion -->
+  <div id="ecran-connexion">
+    <div class="boite">
+      <h2>Connexion</h2>
+      <p class="petit">Réservé aux volontaires dont la candidature a été validée. Pas encore inscrit ? <a href="./#volontaire">Envoyer ma candidature</a>.</p>
+      <form id="form-connexion" novalidate>
+        <div class="champ"><label for="cx-tel">Téléphone</label><input id="cx-tel" type="tel" autocomplete="tel" required placeholder="+243…"></div>
+        <div class="champ"><label for="cx-mdp">Mot de passe</label><input id="cx-mdp" type="password" autocomplete="current-password" required></div>
+        <button class="btn btn-vert" style="width:100%">Se connecter</button>
+        <div class="alerte" hidden></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Tableau du volontaire -->
+  <div id="ecran-volontaire" hidden>
+    <h1 style="font-size:1.8rem">Bonjour <span id="nom-vol"></span></h1>
+    <div class="boite">
+      <h2 style="font-size:1.4rem">Publier une activité</h2>
+      <p class="petit">Votre publication sera vérifiée par l'ONGD avant d'apparaître sur le site. <strong>Sans réseau ?</strong> Remplissez quand même : l'activité est gardée sur le téléphone et envoyée toute seule au retour du réseau.</p>
+      <form id="form-activite" novalidate>
+        <div class="champ"><label for="a-titre">Titre</label><input id="a-titre" maxlength="150" required placeholder="ex. Distribution de kits scolaires à Bolenge"></div>
+        <div class="deux">
+          <div class="champ"><label for="a-date">Date de l'activité</label><input id="a-date" type="date"></div>
+          <div class="champ"><label for="a-lieu">Lieu</label><input id="a-lieu" maxlength="150" placeholder="ex. Mbandaka, quartier…"></div>
+        </div>
+        <div class="champ"><label for="a-texte">Compte rendu</label><textarea id="a-texte" rows="7" required placeholder="Ce qui a été fait, combien de personnes, avec qui, les résultats…"></textarea></div>
+        <div class="champ">
+          <label for="a-photos">Photos <span class="facultatif">(jusqu'à 4)</span></label>
+          <input id="a-photos" type="file" accept="image/*" multiple>
+          <div class="apercus" id="apercus"></div>
+        </div>
+        <button class="btn btn-vert" style="width:100%">Envoyer pour validation</button>
+        <button type="button" class="btn btn-contour" id="btn-brouillon" style="width:100%;margin-top:8px">Enregistrer sur le téléphone (envoyer plus tard)</button>
+        <div class="alerte" hidden></div>
+      </form>
+    </div>
+    <div class="boite" id="boite-brouillons" hidden>
+      <h2 style="font-size:1.4rem">Enregistrées sur le téléphone</h2>
+      <p class="petit">Elles partent automatiquement dès que le réseau revient (gardez cette page ouverte ou rouvrez-la).</p>
+      <div id="brouillons"></div>
+    </div>
+    <div class="boite">
+      <h2 style="font-size:1.4rem">Mes publications</h2>
+      <div id="mes-activites"></div>
+    </div>
+    <div class="boite">
+      <h2 style="font-size:1.4rem">Lancer un live</h2>
+      <p class="petit">Montrez l'activité en direct. Avec un lien YouTube ou Facebook Live, il s'affiche sur le site ; sans lien, une salle Jitsi Meet est créée pour vous (filmez avec l'application Jitsi Meet).</p>
+      <form id="form-live" novalidate>
+        <div class="champ"><label for="l-titre">Titre du live</label><input id="l-titre" name="titre" maxlength="150" required placeholder="ex. Distribution en direct de Bolenge"></div>
+        <div class="champ"><label for="l-lien">Lien YouTube / Facebook Live <span class="facultatif">(facultatif)</span></label><input id="l-lien" name="lien" type="url" placeholder="https://"></div>
+        <button class="btn btn-don" style="width:100%">Démarrer le live</button>
+        <div class="alerte" hidden></div>
+      </form>
+      <div id="mes-lives" style="margin-top:12px"></div>
+    </div>
+    <div class="boite">
+      <h2 style="font-size:1.4rem">Sécurité du compte</h2>
+      <form id="form-mdp" novalidate>
+        <div class="deux">
+          <div class="champ"><label for="m-ancien">Mot de passe actuel</label><input id="m-ancien" type="password" autocomplete="current-password" required></div>
+          <div class="champ"><label for="m-nouveau">Nouveau mot de passe</label><input id="m-nouveau" type="password" autocomplete="new-password" minlength="8" required></div>
+        </div>
+        <button class="btn btn-contour" style="width:100%">Changer le mot de passe</button>
+        <div class="alerte" hidden></div>
+      </form>
+    </div>
+  </div>
+</main>
+
+<script src="commun.js"></script>
+<script>
+const { esc, api, photo, date, message, lire, ecrire, reduire } = outils;
+const $ = s => document.querySelector(s);
+let token = lire('ongd_vol_token');
+let photos = [];
+const LIBELLES = { en_attente: 'En attente de validation', publie: 'Publiée', refuse: 'Refusée' };
+
+async function ouvrir() {
+  if (!token) return montrer(false);
+  try {
+    const d = await api('/volontaires/moi', {}, token);
+    $('#nom-vol').textContent = d.nom;
+    ecrire('ongd_vol_nom', d.nom);
+    $('#mes-activites').innerHTML = d.activites.length ? d.activites.map(a => `
+      <div class="ligne-item">
+        <span class="statut ${a.statut}">${LIBELLES[a.statut] || a.statut}</span>
+        <h3 style="margin:8px 0 2px">${esc(a.titre)}</h3>
+        <div class="petit">${esc(date(a.date_activite || a.cree_le))}${a.lieu ? ' · ' + esc(a.lieu) : ''}</div>
+        ${a.photos.length ? `<div class="vignettes">${a.photos.map(p => `<img src="${photo(p, token)}" alt="">`).join('')}</div>` : ''}
+        ${a.statut === 'refuse' && a.motif_refus ? `<div class="alerte erreur">Motif : ${esc(a.motif_refus)}</div>` : ''}
+      </div>`).join('') : '<p class="petit">Vous n\'avez encore rien publié.</p>';
+    montrer(true); synchroniser(); chargerLives();
+  } catch (e) {
+    if (e.status === 401 || e.status === 403) { token = null; ecrire('ongd_vol_token', null); montrer(false); if (e.status === 403) message($('#form-connexion .alerte'), e.message, 'erreur'); }
+    else if (!e.status) { // hors réseau : on garde l'accès au formulaire
+      $('#nom-vol').textContent = lire('ongd_vol_nom') || '';
+      $('#mes-activites').innerHTML = '<p class="petit">Hors réseau : la liste s\'affichera au retour du réseau.</p>';
+      montrer(true); dessinerBrouillons();
+    }
+    else { montrer(false); message($('#form-connexion .alerte'), e.message, 'erreur'); }
+  }
+}
+function montrer(connecte) {
+  $('#ecran-connexion').hidden = connecte;
+  $('#ecran-volontaire').hidden = !connecte;
+  $('#btn-sortir').hidden = !connecte;
+}
+
+$('#form-connexion').onsubmit = async e => {
+  e.preventDefault();
+  const msg = e.target.querySelector('.alerte'), btn = e.target.querySelector('button');
+  msg.hidden = true; btn.disabled = true;
+  try {
+    const d = await api('/volontaires/connexion', { method: 'POST', body: JSON.stringify({ telephone: $('#cx-tel').value, mot_de_passe: $('#cx-mdp').value }) });
+    token = d.token; ecrire('ongd_vol_token', token); e.target.reset(); await ouvrir();
+  } catch (err) { message(msg, err.message, 'erreur'); }
+  btn.disabled = false;
+};
+
+$('#btn-sortir').onclick = async () => {
+  try { await api('/volontaires/deconnexion', { method: 'POST' }, token); } catch {}
+  token = null; ecrire('ongd_vol_token', null); montrer(false);
+};
+
+function dessinerApercus() {
+  $('#apercus').innerHTML = photos.map((p, i) => `<div><img src="${p}" alt=""><button type="button" data-i="${i}" aria-label="Retirer">×</button></div>`).join('');
+}
+$('#apercus').onclick = e => { const b = e.target.closest('button'); if (b) { photos.splice(+b.dataset.i, 1); dessinerApercus(); } };
+$('#a-photos').onchange = async e => {
+  const msg = $('#form-activite .alerte'); msg.hidden = true;
+  for (const f of [...e.target.files]) {
+    if (photos.length >= 4) { message(msg, '4 photos maximum.', 'info'); break; }
+    try { photos.push(await reduire(f)); } catch (err) { message(msg, err.message, 'erreur'); }
+  }
+  e.target.value = ''; dessinerApercus();
+};
+
+$('#form-activite').onsubmit = async e => {
+  e.preventDefault();
+  const msg = e.target.querySelector('.alerte'), btn = e.target.querySelector('button:not([type=button])');
+  msg.hidden = true; btn.disabled = true; btn.textContent = 'Envoi en cours…';
+  try {
+    const d = await api('/volontaires/activites', { method: 'POST', body: JSON.stringify({
+      titre: $('#a-titre').value, date_activite: $('#a-date').value, lieu: $('#a-lieu').value, texte: $('#a-texte').value, photos }) }, token);
+    message(msg, d.message, 'ok'); e.target.reset(); photos = []; dessinerApercus(); ouvrir();
+  } catch (err) {
+    if (!err.status) { await garderSurTelephone(e.target); message(msg, 'Pas de réseau : activité gardée sur le téléphone. Elle sera envoyée automatiquement.', 'info'); }
+    else message(msg, err.message, 'erreur');
+  }
+  btn.disabled = false; btn.textContent = 'Envoyer pour validation';
+};
+
+/* ---------- Hors réseau : activités gardées sur le téléphone ---------- */
+const BD = {
+  base: null,
+  ouvrir() { return this.base || (this.base = new Promise((ok, ko) => { const r = indexedDB.open('ongd-volontaire', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('brouillons', { keyPath: 'id', autoIncrement: true });
+    r.onsuccess = () => ok(r.result); r.onerror = () => ko(r.error); })); },
+  async op(mode, fn) { const db = await this.ouvrir(); return new Promise((ok, ko) => { const t = db.transaction('brouillons', mode); const req = fn(t.objectStore('brouillons'));
+    t.oncomplete = () => ok(req && req.result); t.onerror = () => ko(t.error); }); },
+  tous() { return this.op('readonly', s => s.getAll()); },
+  ajouter(b) { return this.op('readwrite', s => s.add(b)); },
+  maj(b) { return this.op('readwrite', s => s.put(b)); },
+  suppr(id) { return this.op('readwrite', s => s.delete(id)); },
+};
+async function garderSurTelephone(f) {
+  await BD.ajouter({ enregistre_le: new Date().toISOString(), donnees: { titre: $('#a-titre').value, date_activite: $('#a-date').value, lieu: $('#a-lieu').value, texte: $('#a-texte').value, photos } });
+  f.reset(); photos = []; dessinerApercus(); dessinerBrouillons();
+}
+async function dessinerBrouillons() {
+  let liste = [];
+  try { liste = await BD.tous(); } catch { return; }
+  $('#boite-brouillons').hidden = !liste.length;
+  $('#brouillons').innerHTML = liste.map(b => `<div class="brouillon" data-b="${b.id}">
+    <strong>${esc(b.donnees.titre || 'Sans titre')}</strong> <span class="petit">· gardée le ${new Date(b.enregistre_le).toLocaleString('fr-FR')} · ${b.donnees.photos.length} photo(s)</span>
+    ${b.erreur ? `<div class="alerte erreur">${esc(b.erreur)}</div>` : ''}
+    <div class="actions" style="display:flex;gap:8px;margin-top:8px"><button class="btn btn-vert btn-petit" data-envoyer>Envoyer maintenant</button><button class="btn btn-contour btn-petit" data-suppr>Supprimer</button></div>
+  </div>`).join('');
+}
+$('#brouillons').onclick = async e => {
+  const el = e.target.closest('[data-b]'); if (!el) return;
+  const id = +el.dataset.b;
+  if (e.target.closest('[data-suppr]') && confirm('Supprimer cette activité du téléphone ?')) { await BD.suppr(id); dessinerBrouillons(); }
+  if (e.target.closest('[data-envoyer]')) { if (!navigator.onLine) return commun.toast('Toujours pas de réseau.'); synchroniser(true); }
+};
+$('#btn-brouillon').onclick = async () => {
+  const msg = $('#form-activite .alerte');
+  if ($('#a-titre').value.trim().length < 3) return message(msg, "Donnez un titre à l'activité.", 'erreur');
+  await garderSurTelephone($('#form-activite'));
+  message(msg, 'Activité gardée sur le téléphone. Envoyez-la quand vous voulez.', 'ok');
+};
+let envoiEnCours = false;
+async function synchroniser(force) {
+  if (envoiEnCours || !token || !navigator.onLine) return dessinerBrouillons();
+  envoiEnCours = true; let envoyees = 0;
+  try {
+    for (const b of await BD.tous()) {
+      if (b.erreur && !force) continue;
+      try { await api('/volontaires/activites', { method: 'POST', body: JSON.stringify(b.donnees) }, token); await BD.suppr(b.id); envoyees++; }
+      catch (err) { if (!err.status || err.status === 401 || err.status === 429) break; b.erreur = err.message + ' (corrigez puis renvoyez depuis le formulaire)'; await BD.maj(b); }
+    }
+  } finally { envoiEnCours = false; }
+  if (envoyees) { commun.toast(envoyees + ' activité(s) gardée(s) sur le téléphone envoyée(s).'); ouvrir(); }
+  dessinerBrouillons();
+}
+window.addEventListener('online', () => synchroniser());
+dessinerBrouillons();
+
+/* ---------- Lives ---------- */
+async function chargerLives() {
+  try {
+    const { directs } = await api('/volontaires/directs', {}, token);
+    $('#mes-lives').innerHTML = directs.map(d => `<div class="ligne-item" data-live="${d.id}">
+      ${d.statut === 'en_cours' ? '<span class="badge-direct"><span class="point-rouge"></span>En direct</span>' : '<span class="statut">Terminé</span>'}
+      <strong>${esc(d.titre)}</strong>
+      ${d.statut === 'en_cours' ? `<div class="actions"><a class="btn btn-vert btn-petit" href="${esc(d.url)}" target="_blank" rel="noopener">Ouvrir la salle</a><button class="btn btn-contour btn-petit" data-fin>Terminer le live</button></div>` : ''}
+    </div>`).join('');
+  } catch {}
+}
+$('#mes-lives').onclick = async e => {
+  const b = e.target.closest('[data-fin]'); if (!b) return;
+  try { await api('/volontaires/directs/' + b.closest('[data-live]').dataset.live, { method: 'PATCH', body: '{}' }, token); chargerLives(); } catch (err) { commun.toast(err.message); }
+};
+$('#form-live').onsubmit = async e => {
+  e.preventDefault();
+  const f = e.target, msg = f.querySelector('.alerte'), btn = f.querySelector('button'); msg.hidden = true; btn.disabled = true;
+  try {
+    const d = await api('/volontaires/directs', { method: 'POST', body: JSON.stringify({ titre: f.titre.value, lien: f.lien.value }) }, token);
+    message(msg, d.message, 'ok'); f.reset(); chargerLives();
+    if (/meet\.jit\.si/.test(d.url)) window.open(d.url, '_blank', 'noopener');
+  } catch (err) { message(msg, err.message, 'erreur'); }
+  btn.disabled = false;
+};
+
+/* ---------- Mot de passe ---------- */
+$('#form-mdp').onsubmit = async e => {
+  e.preventDefault();
+  const f = e.target, msg = f.querySelector('.alerte'), btn = f.querySelector('button'); msg.hidden = true; btn.disabled = true;
+  try { const d = await api('/volontaires/mot-de-passe', { method: 'POST', body: JSON.stringify({ ancien: $('#m-ancien').value, nouveau: $('#m-nouveau').value }) }, token); message(msg, d.message, 'ok'); f.reset(); }
+  catch (err) { message(msg, err.message, 'erreur'); }
+  btn.disabled = false;
+};
+
+ouvrir();
+</script>
+</body>
+</html>

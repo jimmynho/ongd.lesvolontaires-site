@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://eajimmy-production.up.railway.app; connect-src 'self' https://eajimmy-production.up.railway.app; frame-src https://www.youtube.com https://www.youtube-nocookie.com; base-uri 'self'; form-action 'self'; object-src 'none'">
+<title>Espace de dialogue — ONGD Les Volontaires</title>
+<meta name="description" content="Posez vos questions, partagez vos idées et témoignages avec l'ONGD Les Volontaires et la communauté.">
+<meta name="theme-color" content="#10392a">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+</head>
+<body>
+<header data-commun></header>
+<main>
+  <section class="tete-page">
+    <div class="conteneur">
+      <span class="sur-titre">Zone de dialogue</span>
+      <h1>Échangeons</h1>
+      <p>Questions, idées, témoignages : la communauté et l'équipe vous répondent. Une première réponse automatique arrive tout de suite.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="conteneur etroit">
+      <div id="vue-liste">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+          <div class="filtres" id="filtres" style="margin:0"></div>
+          <button class="btn btn-don btn-petit" id="btn-nouveau">Nouveau sujet</button>
+        </div>
+        <div class="carte" id="nouveau" hidden style="margin-bottom:18px">
+          <h3>Nouveau sujet</h3>
+          <form id="form-sujet" novalidate>
+            <input name="site_web" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
+            <div class="deux">
+              <div class="champ"><label>Votre nom ou pseudo</label><input name="nom" required maxlength="80"></div>
+              <div class="champ"><label>Catégorie</label><select name="categorie"></select></div>
+            </div>
+            <div class="champ"><label>Titre</label><input name="titre" required maxlength="150"></div>
+            <div class="champ"><label>Message</label><textarea name="message" required maxlength="4000"></textarea></div>
+            <p class="petit">Restez respectueux. Les liens ne sont pas autorisés. L'ONGD peut masquer un message inapproprié.</p>
+            <button class="btn btn-vert" style="width:100%">Publier</button>
+            <div class="alerte" hidden></div>
+          </form>
+        </div>
+        <div id="sujets"></div>
+        <div class="centre"><button class="btn btn-contour" id="plus" hidden>Voir plus</button></div>
+      </div>
+
+      <div id="vue-sujet" hidden>
+        <button class="btn btn-contour btn-petit" id="retour">← Tous les sujets</button>
+        <div class="carte" id="sujet" style="margin-top:14px"></div>
+        <div class="carte" style="margin-top:14px">
+          <h3>Répondre</h3>
+          <form id="form-rep" novalidate>
+            <input name="site_web" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
+            <div class="champ"><label>Votre nom ou pseudo</label><input name="nom" required maxlength="80"></div>
+            <div class="champ"><label>Votre réponse</label><textarea name="message" required maxlength="3000"></textarea></div>
+            <button class="btn btn-vert" style="width:100%">Envoyer</button>
+            <div class="alerte" hidden></div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+<footer data-commun></footer>
+<a class="whatsapp" href="https://wa.me/243850171480" target="_blank" rel="noopener" aria-label="WhatsApp"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2z"/></svg></a>
+
+<script src="commun.js"></script>
+<script>
+const { esc, api, message, lire, ecrire } = outils;
+const $ = s => document.querySelector(s);
+const quand = d => new Date(d).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+let page = 1, categorie = '', sujetCourant = null;
+
+async function liste(ajouter) {
+  try {
+    const d = await api(`/sujets?page=${page}${categorie ? '&categorie=' + encodeURIComponent(categorie) : ''}`);
+    if (!$('#filtres').children.length) {
+      $('#filtres').innerHTML = '<button data-c="" class="actif">Tout</button>' + d.categories.map(c => `<button data-c="${esc(c)}">${esc(c)}</button>`).join('');
+      $('#form-sujet').categorie.innerHTML = d.categories.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+    }
+    const html = d.sujets.map(s => `<button class="carte sujet" data-id="${s.id}" style="margin-bottom:10px">
+      <div class="etiquettes" style="margin:0">${s.epingle ? '<span class="etiquette or">Épinglé</span>' : ''}<span class="etiquette">${esc(s.categorie)}</span></div>
+      <h3>${esc(s.titre)}</h3><p class="petit" style="margin:0 0 6px">${esc(s.extrait)}</p>
+      <span class="petit">par ${esc(s.nom)} · ${quand(s.derniere_activite)} · ${s.reponses} réponse(s)</span></button>`).join('');
+    ajouter ? $('#sujets').insertAdjacentHTML('beforeend', html) : $('#sujets').innerHTML = html || '<div class="vide">Aucun sujet pour le moment. Lancez la discussion !</div>';
+    $('#plus').hidden = !d.suite;
+  } catch (e) { $('#sujets').innerHTML = `<div class="vide">${esc(e.message)}</div>`; }
+}
+$('#filtres').onclick = e => { const b = e.target.closest('button'); if (!b) return; categorie = b.dataset.c; page = 1;
+  document.querySelectorAll('#filtres button').forEach(x => x.classList.toggle('actif', x === b)); liste(); };
+$('#plus').onclick = () => { page++; liste(true); };
+$('#btn-nouveau').onclick = () => { $('#nouveau').hidden = !$('#nouveau').hidden; $('#form-sujet').nom.value ||= lire('ongd_pseudo') || ''; };
+$('#sujets').onclick = e => { const c = e.target.closest('[data-id]'); if (c) location.hash = 'sujet-' + c.dataset.id; };
+$('#retour').onclick = () => { location.hash = ''; };
+
+async function ouvrirSujet(id) {
+  sujetCourant = id;
+  $('#vue-liste').hidden = true; $('#vue-sujet').hidden = false; window.scrollTo(0, 0);
+  $('#form-rep').nom.value ||= lire('ongd_pseudo') || '';
+  try {
+    const s = await api('/sujets/' + id);
+    $('#sujet').innerHTML = `<span class="etiquette">${esc(s.categorie)}</span><h2 style="margin-top:10px">${esc(s.titre)}</h2>
+      <p class="petit">par ${esc(s.nom)} · ${quand(s.cree_le)}</p><p class="texte-long">${esc(s.message)}</p>
+      <h3 style="margin-top:20px">${s.reponses.length} réponse(s)</h3>
+      ${s.reponses.map(r => `<div class="message-fil${r.admin ? ' admin' : r.auto ? ' auto' : ''}">
+        <div class="auteur">${esc(r.nom)} ${r.admin ? '<span class="etiquette">Équipe</span>' : r.auto ? '<span class="etiquette or">Réponse automatique</span>' : ''}</div>
+        <div class="petit">${quand(r.cree_le)}</div><p class="texte-long" style="margin:6px 0 0">${esc(r.message)}</p></div>`).join('')}`;
+  } catch (e) { $('#sujet').innerHTML = `<div class="alerte erreur">${esc(e.message)}</div>`; }
+}
+function route() {
+  const m = /^#sujet-(\d+)$/.exec(location.hash);
+  if (m) ouvrirSujet(m[1]); else { $('#vue-liste').hidden = false; $('#vue-sujet').hidden = true; liste(); }
+}
+window.addEventListener('hashchange', route);
+
+$('#form-sujet').onsubmit = async e => {
+  e.preventDefault();
+  const f = e.target, msg = f.querySelector('.alerte'), btn = f.querySelector('button'); msg.hidden = true; btn.disabled = true;
+  try {
+    const d = await api('/sujets', { method: 'POST', body: JSON.stringify({ nom: f.nom.value, categorie: f.categorie.value, titre: f.titre.value, message: f.message.value, site_web: f.site_web.value }) });
+    ecrire('ongd_pseudo', f.nom.value); f.reset(); $('#nouveau').hidden = true;
+    commun.toast('Sujet publié. La réponse automatique arrive dans quelques secondes.');
+    location.hash = 'sujet-' + d.id;
+    setTimeout(() => sujetCourant == d.id && ouvrirSujet(d.id), 6000);
+  } catch (err) { message(msg, err.message, 'erreur'); }
+  btn.disabled = false;
+};
+$('#form-rep').onsubmit = async e => {
+  e.preventDefault();
+  const f = e.target, msg = f.querySelector('.alerte'), btn = f.querySelector('button'); msg.hidden = true; btn.disabled = true;
+  try {
+    await api(`/sujets/${sujetCourant}/reponses`, { method: 'POST', body: JSON.stringify({ nom: f.nom.value, message: f.message.value, site_web: f.site_web.value }) });
+    ecrire('ongd_pseudo', f.nom.value); f.message.value = ''; ouvrirSujet(sujetCourant);
+  } catch (err) { message(msg, err.message, 'erreur'); }
+  btn.disabled = false;
+};
+route();
+</script>
+</body>
+</html>

@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://eajimmy-production.up.railway.app; connect-src 'self' https://eajimmy-production.up.railway.app; frame-src https://www.youtube.com https://www.youtube-nocookie.com; base-uri 'self'; form-action 'self'; object-src 'none'">
+<title>Formations et événements — ONGD Les Volontaires</title>
+<meta name="description" content="Formations et événements de l'ONGD Les Volontaires : inscriptions, réservations et suivi des formations étape par étape.">
+<meta name="theme-color" content="#10392a">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+</head>
+<body>
+<header data-commun></header>
+<main>
+  <section class="tete-page">
+    <div class="conteneur">
+      <span class="sur-titre">Apprendre et participer</span>
+      <h1>Formations et événements</h1>
+      <p>Inscrivez-vous à une formation et suivez-la étape par étape, ou réservez votre place à nos événements.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="conteneur">
+      <div class="filtres" id="filtres">
+        <button data-t="" class="actif">Tout</button><button data-t="formation">Formations</button><button data-t="evenement">Événements</button>
+      </div>
+      <div class="grille-3" id="liste"></div>
+    </div>
+  </section>
+
+  <section id="acces" class="fond-blanc">
+    <div class="conteneur etroit">
+      <span class="sur-titre">Déjà inscrit ?</span>
+      <h2>Ma formation · Ma réservation</h2>
+      <p class="intro">Entrez le code à 6 caractères reçu à l'inscription. Une formation ouverte reste lisible sur ce téléphone même sans réseau.</p>
+      <form id="form-acces" class="carte" novalidate>
+        <div class="champ"><label for="code">Mon code</label><input id="code" maxlength="6" autocapitalize="characters" autocomplete="off" required style="text-transform:uppercase;letter-spacing:.2em;font-weight:700" data-no-tr></div>
+        <button class="btn btn-vert" style="width:100%">Ouvrir</button>
+        <div class="alerte" hidden></div>
+      </form>
+      <div id="espace" style="margin-top:20px"></div>
+    </div>
+  </section>
+</main>
+<footer data-commun></footer>
+<a class="whatsapp" href="https://wa.me/243850171480" target="_blank" rel="noopener" aria-label="WhatsApp"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2z"/></svg></a>
+
+<dialog id="dlg">
+  <button class="dlg-fermer" aria-label="Fermer" onclick="this.closest('dialog').close()">×</button>
+  <div class="dlg-corps" id="dlg-contenu"></div>
+</dialog>
+
+<script src="commun.js"></script>
+<script>
+const { esc, api, montant, message, lire, ecrire } = outils;
+const $ = s => document.querySelector(s);
+const quand = (d, f) => d ? new Date(d).toLocaleString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + (f ? ' → ' + new Date(f).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }) : '') : 'Date à confirmer';
+const prix = p => p.prix_usd ? `${p.prix_usd} $ · ${montant(p.prix_cdf, 'CDF')}` : 'Gratuit';
+let programmes = [], filtre = '';
+
+async function charger() {
+  try {
+    programmes = (await api('/programmes')).programmes;
+  } catch (e) { $('#liste').innerHTML = `<div class="vide">${esc(e.message)}</div>`; return; }
+  dessiner();
+}
+function dessiner() {
+  const l = programmes.filter(p => !filtre || p.type === filtre);
+  $('#liste').innerHTML = l.length ? l.map(p => {
+    const passe = new Date(p.fin || p.debut || Date.now() + 1) < new Date();
+    return `<button class="carte activite prog" data-id="${p.id}">
+      <div class="image" style="${p.a_image ? `background-image:url('${ONGD.api}/media/programme/${p.id}')` : ''}">${p.a_image ? '' : (p.type === 'formation' ? 'Formation' : 'Événement')}</div>
+      <div class="corps">
+        <div class="etiquettes">
+          <span class="etiquette">${p.type === 'formation' ? 'Formation' : 'Événement'}</span>
+          <span class="etiquette or">${prix(p)}</span>
+          ${passe ? '<span class="etiquette rouge">Terminé</span>' : p.places_restantes === 0 ? '<span class="etiquette rouge">Complet</span>' : p.places_restantes != null ? `<span class="etiquette">${p.places_restantes} place(s)</span>` : ''}
+        </div>
+        <h3>${esc(p.titre)}</h3>
+        <div class="meta">${esc(quand(p.debut))}${p.en_ligne ? ' · En ligne' : p.lieu ? ' · ' + esc(p.lieu) : ''}</div>
+        ${p.resume ? `<p>${esc(p.resume)}</p>` : ''}
+      </div></button>`;
+  }).join('') : '<div class="vide">Aucune formation ni aucun événement pour le moment. Revenez bientôt !</div>';
+}
+$('#filtres').onclick = e => { const b = e.target.closest('button'); if (!b) return; filtre = b.dataset.t;
+  document.querySelectorAll('#filtres button').forEach(x => x.classList.toggle('actif', x === b)); dessiner(); };
+
+$('#liste').onclick = e => {
+  const c = e.target.closest('[data-id]'); if (!c) return;
+  const p = programmes.find(x => x.id == c.dataset.id);
+  const ouvert = !(new Date(p.fin || p.debut || Date.now() + 1) < new Date()) && p.places_restantes !== 0;
+  $('#dlg-contenu').innerHTML = `
+    <div class="etiquettes"><span class="etiquette">${p.type === 'formation' ? 'Formation' : 'Événement'}</span><span class="etiquette or">${prix(p)}</span></div>
+    <h2>${esc(p.titre)}</h2>
+    <p class="petit">${esc(quand(p.debut, p.fin))}${p.en_ligne ? ' · En ligne' : p.lieu ? ' · ' + esc(p.lieu) : ''}</p>
+    ${p.description ? `<p class="texte-long">${esc(p.description)}</p>` : p.resume ? `<p>${esc(p.resume)}</p>` : ''}
+    ${p.etapes.length ? `<h3>Les étapes de la formation</h3><ol>${p.etapes.map(e => `<li>${esc(e.titre)}</li>`).join('')}</ol>` : ''}
+    ${ouvert ? `<div class="carte" style="margin-top:16px">
+      <h3>${p.type === 'formation' ? 'M\'inscrire' : 'Réserver ma place'}</h3>
+      <form id="form-insc" novalidate>
+        <input name="site_web" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
+        <div class="champ"><label>Nom complet</label><input name="nom" required autocomplete="name" value="${esc(lire('ongd_nom') || '')}"></div>
+        <div class="deux">
+          <div class="champ"><label>Téléphone</label><input name="telephone" type="tel" required autocomplete="tel" placeholder="+243…"></div>
+          <div class="champ"><label>E-mail <span class="facultatif">(facultatif)</span></label><input name="email" type="email" autocomplete="email"></div>
+        </div>
+        ${p.type === 'evenement' ? `<div class="champ"><label>Nombre de places</label><input name="places" type="number" min="1" max="${Math.min(20, p.places_restantes ?? 20)}" value="1"></div>` : ''}
+        ${p.prix_usd ? `<div class="champ"><label>Payer en</label><select name="devise"><option value="USD">Dollars (${p.prix_usd} $ par place)</option><option value="CDF">Francs congolais (${montant(p.prix_cdf, 'CDF')} par place)</option></select></div>` : ''}
+        <button class="btn btn-don" style="width:100%">${p.prix_usd ? 'Continuer vers le paiement' : (p.type === 'formation' ? 'Confirmer mon inscription' : 'Confirmer ma réservation')}</button>
+        <div class="alerte" hidden></div>
+      </form>
+      <div id="suite-insc"></div>
+    </div>` : '<div class="alerte info">Les inscriptions sont fermées.</div>'}`;
+  $('#dlg').showModal();
+  const f = $('#form-insc');
+  if (f) f.onsubmit = async ev => {
+    ev.preventDefault();
+    const msg = f.querySelector('.alerte'), btn = f.querySelector('button'); msg.hidden = true; btn.disabled = true;
+    try {
+      const d = await api(`/programmes/${p.id}/inscription`, { method: 'POST', body: JSON.stringify({
+        nom: f.nom.value, telephone: f.telephone.value, email: f.email.value, places: f.places ? f.places.value : 1,
+        devise: f.devise ? f.devise.value : 'USD', site_web: f.site_web.value }) });
+      ecrire('ongd_nom', f.nom.value);
+      f.hidden = true;
+      if (d.gratuit) {
+        $('#suite-insc').innerHTML = `<div class="alerte ok">${esc(d.message)}</div><p>Votre code :</p><span class="code-grand" data-no-tr>${esc(d.code)}</span>
+          <p class="petit">Notez-le ou faites une capture d'écran.${p.type === 'formation' ? ' Il ouvre la formation en bas de cette page.' : ''}</p>`;
+        ecrire('ongd_dernier_code', d.code);
+      } else commun.paiement($('#suite-insc'), d);
+      charger();
+    } catch (err) { message(msg, err.message, 'erreur'); }
+    btn.disabled = false;
+  };
+};
+
+/* ---------- Espace participant ---------- */
+const youtube = u => { const m = /(?:youtube\.com\/(?:watch\?v=|live\/|embed\/)|youtu\.be\/)([\w-]{11})/.exec(u || ''); return m && m[1]; };
+function afficherEspace(d) {
+  const zone = $('#espace');
+  if (d.type !== 'formation') {
+    zone.innerHTML = `<div class="carte"><span class="etiquette">Réservation confirmée</span><h3 style="margin-top:10px">${esc(d.titre)}</h3>
+      <p>${esc(quand(d.debut, d.fin))}${d.en_ligne ? ' · En ligne' : d.lieu ? ' · ' + esc(d.lieu) : ''}</p>
+      <p>Au nom de <strong>${esc(d.nom)}</strong> · ${d.places} place(s)</p><span class="code-grand" data-no-tr>${esc(d.code)}</span>
+      <p class="petit">Présentez ce code à l'entrée.</p></div>`;
+    return;
+  }
+  const faites = new Set(d.progression || []), total = d.etapes.length;
+  zone.innerHTML = `<div class="carte">
+    <span class="etiquette">Formation</span><h3 style="margin-top:10px">${esc(d.titre)}</h3>
+    <p class="petit">Bonjour ${esc(d.nom)} · ${esc(quand(d.debut, d.fin))}</p>
+    <div class="progression"><span style="width:${total ? Math.round(faites.size / total * 100) : 0}%"></span></div>
+    <p class="petit">${faites.size} étape(s) terminée(s) sur ${total}</p>
+    ${d.etapes.map((e, i) => `<details class="etape${faites.has(e.id) ? ' faite' : ''}" ${i === 0 ? 'open' : ''}>
+      <summary><span class="num">${faites.has(e.id) ? '✓' : i + 1}</span>${esc(e.titre)}</summary>
+      <div class="contenu">
+        ${e.contenu ? `<p class="texte-long">${esc(e.contenu)}</p>` : ''}
+        ${youtube(e.video_url) && navigator.onLine ? `<iframe class="video" src="https://www.youtube-nocookie.com/embed/${youtube(e.video_url)}" allowfullscreen loading="lazy" title="Vidéo"></iframe>` : e.video_url ? `<p><a href="${esc(e.video_url)}" target="_blank" rel="noopener">Voir la vidéo</a></p>` : ''}
+        <label class="case"><input type="checkbox" data-etape="${e.id}" ${faites.has(e.id) ? 'checked' : ''}> J'ai terminé cette étape</label>
+      </div></details>`).join('') || '<p class="petit">Les étapes seront bientôt ajoutées.</p>'}
+  </div>`;
+  zone.querySelectorAll('[data-etape]').forEach(c => c.onchange = async () => {
+    const id = +c.dataset.etape;
+    c.checked ? faites.add(id) : faites.delete(id);
+    d.progression = [...faites]; ecrire('ongd_formation_' + d.code, JSON.stringify(d));
+    afficherEspace(d);
+    try { await api('/acces/progression', { method: 'POST', body: JSON.stringify({ code: d.code, etape: id, fait: faites.has(id) }) }); }
+    catch { commun.toast('Progression enregistrée sur le téléphone, elle sera envoyée plus tard.'); ecrire('ongd_prog_attente_' + d.code, '1'); }
+  });
+}
+async function ouvrir(code) {
+  const msg = $('#form-acces .alerte'); msg.hidden = true;
+  code = code.trim().toUpperCase();
+  try {
+    const d = await api('/acces', { method: 'POST', body: JSON.stringify({ code }) });
+    // progression faite hors réseau : on la renvoie
+    const local = JSON.parse(lire('ongd_formation_' + code) || 'null');
+    if (local && lire('ongd_prog_attente_' + code) && d.etapes) {
+      for (const id of local.progression || []) if (!(d.progression || []).includes(id))
+        await api('/acces/progression', { method: 'POST', body: JSON.stringify({ code, etape: id, fait: true }) }).catch(() => {});
+      d.progression = [...new Set([...(d.progression || []), ...(local.progression || [])])];
+      ecrire('ongd_prog_attente_' + code, null);
+    }
+    ecrire('ongd_formation_' + code, JSON.stringify(d)); ecrire('ongd_dernier_code', code);
+    afficherEspace(d);
+  } catch (e) {
+    const local = lire('ongd_formation_' + code);
+    if (local && e.message.includes('connexion')) { afficherEspace(JSON.parse(local)); commun.toast('Hors réseau : version enregistrée sur ce téléphone.'); }
+    else message(msg, e.message, 'erreur');
+  }
+}
+$('#form-acces').onsubmit = e => { e.preventDefault(); ouvrir($('#code').value); };
+
+const params = new URLSearchParams(location.search);
+const codeInitial = params.get('code') || lire('ongd_dernier_code');
+if (codeInitial) { $('#code').value = codeInitial; ouvrir(codeInitial); }
+charger();
+</script>
+</body>
+</html>

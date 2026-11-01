@@ -1,0 +1,744 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://eajimmy-production.up.railway.app; connect-src 'self' https://eajimmy-production.up.railway.app; frame-src 'none'; base-uri 'self'; form-action 'self'; object-src 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Administration — ONGD Les Volontaires</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#10392a">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+</head>
+<body class="page-outil">
+<header class="entete">
+  <div class="conteneur">
+    <a class="marque" href="./"><img src="logo.svg" alt=""><span><small>Administration</small>Les Volontaires</span></a>
+    <button class="btn btn-contour btn-petit" id="btn-sortir" hidden>Se déconnecter</button>
+  </div>
+</header>
+
+<main class="conteneur">
+  <div id="ecran-connexion" class="etroit" style="margin:0 auto">
+    <div class="boite">
+      <h2>Administration de l'ONGD</h2>
+      <form id="form-connexion" novalidate>
+        <div class="champ"><label for="cx-tel">Numéro de l'administrateur</label><input id="cx-tel" type="tel" autocomplete="tel" required></div>
+        <div class="champ"><label for="cx-mdp">Mot de passe</label><input id="cx-mdp" type="password" autocomplete="current-password" required></div>
+        <div class="champ" id="champ-code" hidden><label for="cx-code">Code à 6 chiffres (application d'authentification)</label><input id="cx-code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" style="letter-spacing:.3em;font-weight:700"></div>
+        <button class="btn btn-vert" style="width:100%">Se connecter</button>
+        <div class="alerte" hidden></div>
+      </form>
+    </div>
+  </div>
+
+  <div id="ecran-admin" hidden>
+    <div class="onglets" id="onglets">
+      <button data-o="activites" class="actif">À valider <span class="pastille" id="p-activites" hidden></span></button>
+      <button data-o="publier">Publier</button>
+      <button data-o="volontaires">Volontaires <span class="pastille" id="p-volontaires" hidden></span></button>
+      <button data-o="dons">Dons <span class="pastille" id="p-dons" hidden></span></button>
+      <button data-o="messages">Messages <span class="pastille" id="p-messages" hidden></span></button>
+      <button data-o="formations">Formations <span class="pastille" id="p-inscriptions" hidden></span></button>
+      <button data-o="boutique">Boutique <span class="pastille" id="p-commandes" hidden></span></button>
+      <button data-o="annonces">Annonces <span class="pastille" id="p-annonces" hidden></span></button>
+      <button data-o="dialogue">Dialogue</button>
+      <button data-o="direct">Direct</button>
+      <button data-o="reglages">Réglages</button>
+      <button data-o="securite">Sécurité</button>
+    </div>
+    <div id="alerte-generale" class="alerte" hidden></div>
+
+    <!-- Activités -->
+    <section class="boite" data-panneau="activites" style="padding:22px">
+      <div class="bascule" id="filtre-act">
+        <button data-s="en_attente" class="actif">En attente</button><button data-s="publie">Publiées</button><button data-s="refuse">Refusées</button>
+      </div>
+      <div id="liste-act"></div>
+    </section>
+
+    <!-- Publier en tant qu'ONGD -->
+    <section class="boite etroit" data-panneau="publier" hidden style="padding:22px">
+      <h2 style="font-size:1.4rem">Publier une activité (équipe de l'ONGD)</h2>
+      <p class="petit">Publiée directement sur le site, sans validation.</p>
+      <form id="form-publier" novalidate>
+        <div class="champ"><label for="a-titre">Titre</label><input id="a-titre" maxlength="150" required></div>
+        <div class="deux">
+          <div class="champ"><label for="a-date">Date</label><input id="a-date" type="date"></div>
+          <div class="champ"><label for="a-lieu">Lieu</label><input id="a-lieu" maxlength="150"></div>
+        </div>
+        <div class="champ"><label for="a-texte">Compte rendu</label><textarea id="a-texte" rows="7" required></textarea></div>
+        <div class="champ"><label for="a-photos">Photos (jusqu'à 4)</label><input id="a-photos" type="file" accept="image/*" multiple><div class="apercus" id="apercus"></div></div>
+        <button class="btn btn-vert" style="width:100%">Publier sur le site</button>
+        <div class="alerte" hidden></div>
+      </form>
+    </section>
+
+    <!-- Volontaires -->
+    <section class="boite" data-panneau="volontaires" hidden style="padding:22px"><div id="liste-vol"></div></section>
+
+    <!-- Dons -->
+    <section class="boite" data-panneau="dons" hidden style="padding:22px">
+      <div class="totaux" id="totaux"></div>
+      <p class="petit" id="etat-paiement"></p>
+      <button class="btn btn-contour btn-petit" id="btn-csv">Télécharger pour la comptabilité (CSV)</button>
+      <div id="liste-dons" style="margin-top:10px"></div>
+    </section>
+
+    <!-- Messages -->
+    <section class="boite" data-panneau="messages" hidden style="padding:22px"><div id="liste-msg"></div></section>
+
+    <!-- Formations et événements -->
+    <section class="boite" data-panneau="formations" hidden style="padding:22px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+        <button class="btn btn-vert btn-petit" id="btn-nouv-prog">Nouvelle formation / événement</button>
+        <form id="form-entree" style="display:flex;gap:6px" novalidate><input name="code" placeholder="Code à l'entrée" maxlength="6" style="width:150px;min-height:38px;text-transform:uppercase"><button class="btn btn-contour btn-petit">Vérifier</button></form>
+      </div>
+      <div id="resultat-entree"></div>
+      <form id="form-prog" class="carte" hidden novalidate style="margin-bottom:16px">
+        <h3 id="titre-form-prog">Nouvelle formation / événement</h3>
+        <div class="deux">
+          <div class="champ"><label>Type</label><select name="type"><option value="formation">Formation</option><option value="evenement">Événement (réservation de places)</option></select></div>
+          <div class="champ"><label>Statut</label><select name="statut"><option value="publie">Publié</option><option value="brouillon">Brouillon (caché)</option><option value="annule">Annulé</option></select></div>
+        </div>
+        <div class="champ"><label>Titre</label><input name="titre" maxlength="150" required></div>
+        <div class="champ"><label>Résumé (1 phrase)</label><input name="resume" maxlength="300"></div>
+        <div class="champ"><label>Description</label><textarea name="description"></textarea></div>
+        <div class="deux">
+          <div class="champ"><label>Début</label><input name="debut" type="datetime-local"></div>
+          <div class="champ"><label>Fin</label><input name="fin" type="datetime-local"></div>
+          <div class="champ"><label>Lieu</label><input name="lieu" maxlength="150"></div>
+          <div class="champ"><label class="case" style="margin-top:34px"><input type="checkbox" name="en_ligne"> En ligne</label></div>
+          <div class="champ"><label>Nombre de places <span class="facultatif">(vide = illimité)</span></label><input name="places" type="number" min="1"></div>
+          <div class="champ"><label>Prix par place en $ <span class="facultatif">(0 = gratuit)</span></label><input name="prix_usd" type="number" min="0" step="1" value="0"></div>
+        </div>
+        <div class="champ"><label>Image</label><input name="image" type="file" accept="image/*"></div>
+        <h3>Étapes de la formation</h3>
+        <p class="petit">Les participants inscrits voient le contenu de chaque étape et cochent leur progression.</p>
+        <div id="etapes"></div>
+        <button type="button" class="btn btn-contour btn-petit" id="ajout-etape">+ Ajouter une étape</button>
+        <div style="display:flex;gap:8px;margin-top:16px"><button class="btn btn-vert">Enregistrer</button><button type="button" class="btn btn-contour" id="annuler-prog">Annuler</button></div>
+        <div class="alerte" hidden></div>
+      </form>
+      <div id="liste-prog"></div>
+      <div id="inscrits" hidden></div>
+    </section>
+
+    <!-- Boutique -->
+    <section class="boite" data-panneau="boutique" hidden style="padding:22px">
+      <div class="bascule" id="filtre-bout"><button data-v="commandes" class="actif">Commandes</button><button data-v="produits">Produits</button></div>
+      <div id="vue-commandes"></div>
+      <div id="vue-produits" hidden>
+        <form id="form-produit" class="carte" novalidate style="margin-bottom:16px">
+          <h3 id="titre-form-produit">Ajouter un produit</h3>
+          <div class="champ"><label>Nom</label><input name="nom" maxlength="120" required></div>
+          <div class="champ"><label>Description</label><textarea name="description" style="min-height:70px"></textarea></div>
+          <div class="deux">
+            <div class="champ"><label>Prix en $ (nombre entier)</label><input name="prix_usd" type="number" min="1" step="1" required></div>
+            <div class="champ"><label>Stock <span class="facultatif">(vide = illimité)</span></label><input name="stock" type="number" min="0"></div>
+          </div>
+          <div class="champ"><label>Photo</label><input name="image" type="file" accept="image/*"></div>
+          <div style="display:flex;gap:8px"><button class="btn btn-vert">Enregistrer</button><button type="button" class="btn btn-contour" id="annuler-produit" hidden>Annuler</button></div>
+          <div class="alerte" hidden></div>
+        </form>
+        <div id="liste-produits"></div>
+      </div>
+    </section>
+
+    <!-- Annonces -->
+    <section class="boite" data-panneau="annonces" hidden style="padding:22px"><div id="liste-annonces"></div></section>
+
+    <!-- Dialogue -->
+    <section class="boite" data-panneau="dialogue" hidden style="padding:22px"><div id="liste-sujets"></div></section>
+
+    <!-- Direct -->
+    <section class="boite" data-panneau="direct" hidden style="padding:22px">
+      <form id="form-direct" class="carte" novalidate style="margin-bottom:16px">
+        <h3>Programmer une réunion ou un live</h3>
+        <div class="deux">
+          <div class="champ"><label>Type</label><select name="type"><option value="reunion">Réunion virtuelle</option><option value="live">Live d'activité</option></select></div>
+          <div class="champ"><label>Date et heure</label><input name="debut" type="datetime-local"></div>
+        </div>
+        <div class="champ"><label>Titre</label><input name="titre" maxlength="150" required></div>
+        <div class="champ"><label>Description</label><input name="description" maxlength="1000"></div>
+        <div class="champ"><label>Lien YouTube / Facebook <span class="facultatif">(vide = salle Jitsi Meet créée automatiquement)</span></label><input name="lien" type="url" placeholder="https://"></div>
+        <div class="champ"><label>Code d'accès <span class="facultatif">(vide = ouvert à tous)</span></label><input name="code" maxlength="40" autocomplete="off"></div>
+        <label class="case" style="margin-bottom:12px"><input type="checkbox" name="maintenant"> Commencer maintenant</label>
+        <button class="btn btn-vert" style="width:100%">Enregistrer</button>
+        <div class="alerte" hidden></div>
+      </form>
+      <div id="liste-directs"></div>
+    </section>
+
+    <!-- Réglages -->
+    <section class="boite etroit" data-panneau="reglages" hidden style="padding:22px">
+      <p id="etat-services" class="petit"></p>
+      <form id="form-reglages" novalidate>
+        <div class="champ"><label>Taux du jour : 1 $ = … FC</label><input name="taux_cdf" type="number" min="100" step="1"></div>
+        <label>Forfaits des annonces (jours / prix en $)</label>
+        <div id="forfaits-admin"></div>
+        <div class="champ"><label>Informations pour l'assistant IA <span class="facultatif">(horaires, projets en cours, réponses aux questions fréquentes…)</span></label><textarea name="infos_ia" rows="7"></textarea></div>
+        <label class="case" style="margin-bottom:14px"><input type="checkbox" name="reponses_auto"> Réponses automatiques par l'IA (messages, partenariats, dialogue)</label>
+        <div class="champ"><label>Mots interdits dans le dialogue <span class="facultatif">(séparés par des virgules)</span></label><textarea name="mots_interdits" style="min-height:70px"></textarea></div>
+        <button class="btn btn-vert" style="width:100%">Enregistrer les réglages</button>
+        <div class="alerte" hidden></div>
+      </form>
+    </section>
+
+    <!-- Sécurité -->
+    <section class="boite" data-panneau="securite" hidden style="padding:22px">
+      <h3>Double authentification</h3>
+      <div id="etat-2fa"></div>
+      <div id="config-2fa"></div>
+      <h3 style="margin-top:22px">Sessions</h3>
+      <p id="sessions" class="petit"></p>
+      <button class="btn btn-contour btn-petit" id="btn-tout-deco">Déconnecter tous les autres appareils</button>
+      <h3 style="margin-top:22px">Journal de sécurité</h3>
+      <div id="journal" style="font-size:.9rem"></div>
+    </section>
+  </div>
+</main>
+
+<script>
+const { esc, api, photo, date, montant, message, lire, ecrire, reduire } = outils;
+const $ = s => document.querySelector(s);
+const lireS = k => { try { return sessionStorage.getItem(k); } catch { return null; } };
+const ecrireS = (k, v) => { try { v == null ? sessionStorage.removeItem(k) : sessionStorage.setItem(k, v); } catch {} };
+ecrire('ongd_admin_token', null); // ancien emplacement, effacé par sécurité
+let token = lireS('ongd_admin_token');
+const A = (chemin, opts) => api(chemin, opts, token);
+const STATUTS = { en_attente: 'En attente', publie: 'Publiée', refuse: 'Refusée', actif: 'Actif', suspendu: 'Suspendu',
+  paye: 'Reçu', declare: 'Déclaré — à vérifier', annule: 'Annulé', echoue: 'Échoué', confirme: 'Confirmé', payee: 'Payée', livree: 'Livrée',
+  annulee: 'Annulée', active: 'En ligne', refusee: 'Refusée', brouillon: 'Brouillon', prevu: 'Prévu', en_cours: 'En direct', termine: 'Terminé', masque: 'Masqué', visible: 'Visible' };
+const badge = s => `<span class="statut ${s}">${STATUTS[s] || s}</span>`;
+const heure = iso => new Date(iso).toLocaleString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+function erreur(e) {
+  if (e.status === 401) { token = null; ecrireS('ongd_admin_token', null); montrer(false); return; }
+  message($('#alerte-generale'), e.message, 'erreur'); setTimeout(() => $('#alerte-generale').hidden = true, 5000);
+}
+function montrer(connecte) {
+  $('#ecran-connexion').hidden = connecte; $('#ecran-admin').hidden = !connecte; $('#btn-sortir').hidden = !connecte;
+}
+
+$('#form-connexion').onsubmit = async e => {
+  e.preventDefault();
+  const msg = e.target.querySelector('.alerte'), btn = e.target.querySelector('button');
+  msg.hidden = true; btn.disabled = true;
+  try {
+    const d = await api('/admin/connexion', { method: 'POST', body: JSON.stringify({ telephone: $('#cx-tel').value, mot_de_passe: $('#cx-mdp').value, code: $('#cx-code').value || undefined }) });
+    token = d.token; ecrireS('ongd_admin_token', token); e.target.reset(); $('#champ-code').hidden = true; demarrer();
+  } catch (err) {
+    message(msg, err.message, 'erreur');
+    if (/6 chiffres/.test(err.message)) { $('#champ-code').hidden = false; $('#cx-code').focus(); }
+  }
+  btn.disabled = false;
+};
+$('#btn-sortir').onclick = async () => { try { await A('/admin/deconnexion', { method: 'POST' }); } catch {} token = null; ecrireS('ongd_admin_token', null); montrer(false); };
+
+/* ---------- Onglets ---------- */
+let onglet = 'activites';
+$('#onglets').onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  onglet = b.dataset.o;
+  document.querySelectorAll('#onglets button').forEach(x => x.classList.toggle('actif', x === b));
+  document.querySelectorAll('[data-panneau]').forEach(p => p.hidden = p.dataset.panneau !== onglet);
+  charger();
+};
+function charger() { resume(); ({ activites: chargerAct, volontaires: chargerVol, dons: chargerDons, messages: chargerMsg, formations: chargerProg, boutique: chargerBoutique,
+  annonces: chargerAnnonces, dialogue: chargerSujets, direct: chargerDirects, reglages: chargerReglages, securite: chargerSecurite }[onglet] || (() => {}))(); }
+
+async function resume() {
+  try {
+    const d = await A('/admin/resume');
+    for (const k of ['activites', 'volontaires', 'dons', 'messages', 'inscriptions', 'commandes', 'annonces']) { const p = $('#p-' + k); p.textContent = d.en_attente[k]; p.hidden = !d.en_attente[k]; }
+    $('#totaux').innerHTML = (d.dons_recus.length ? d.dons_recus : [{ devise: 'USD', total: 0, nombre: 0 }])
+      .map(t => `<div><strong>${montant(t.total, t.devise)}</strong><span class="petit">${t.nombre} don(s) reçu(s)</span></div>`).join('');
+    $('#etat-paiement').textContent = d.paiement_en_ligne ? 'Paiement en ligne CinetPay : actif.' : 'Paiement en ligne non configuré : les donateurs voient les comptes Mobile Money de config.js.';
+  } catch (e) { erreur(e); }
+}
+
+/* ---------- Activités ---------- */
+let filtreAct = 'en_attente';
+$('#filtre-act').onclick = e => { const b = e.target.closest('button'); if (!b) return; filtreAct = b.dataset.s;
+  document.querySelectorAll('#filtre-act button').forEach(x => x.classList.toggle('actif', x === b)); chargerAct(); };
+async function chargerAct() {
+  try {
+    const { activites } = await A('/admin/activites?statut=' + filtreAct);
+    $('#liste-act').innerHTML = activites.length ? activites.map(a => `
+      <div class="ligne-item" data-id="${a.id}">
+        ${badge(a.statut)} <span class="petit">par ${esc(a.auteur)}${a.auteur_telephone ? ' (+' + esc(a.auteur_telephone) + ')' : ''} · envoyé le ${heure(a.cree_le)}</span>
+        <h3 style="margin:8px 0 2px">${esc(a.titre)}</h3>
+        <div class="petit">${esc(date(a.date_activite))}${a.lieu ? ' · ' + esc(a.lieu) : ''}</div>
+        <p class="texte-long" style="margin:8px 0">${esc(a.texte)}</p>
+        ${a.photos.length ? `<div class="vignettes">${a.photos.map(p => `<a href="${photo(p, token)}" target="_blank"><img src="${photo(p, token)}" alt=""></a>`).join('')}</div>` : ''}
+        ${a.motif_refus ? `<p class="petit">Motif du refus : ${esc(a.motif_refus)}</p>` : ''}
+        <div class="actions">
+          ${a.statut !== 'publie' ? '<button class="btn btn-vert btn-petit" data-a="publier">Publier</button>' : ''}
+          ${a.statut === 'en_attente' ? '<button class="btn btn-contour btn-petit" data-a="refuser">Refuser</button>' : ''}
+          <button class="btn btn-contour btn-petit" data-a="supprimer" style="color:var(--rouge)">Supprimer</button>
+        </div>
+      </div>`).join('') : '<p class="petit">Aucune activité ici.</p>';
+  } catch (e) { erreur(e); }
+}
+$('#liste-act').onclick = async e => {
+  const b = e.target.closest('[data-a]'); if (!b) return;
+  const id = b.closest('[data-id]').dataset.id, a = b.dataset.a;
+  try {
+    if (a === 'publier') await A('/admin/activites/' + id, { method: 'PATCH', body: JSON.stringify({ action: 'publier' }) });
+    if (a === 'refuser') { const motif = prompt('Motif du refus (le volontaire le verra) :'); if (motif === null) return;
+      await A('/admin/activites/' + id, { method: 'PATCH', body: JSON.stringify({ action: 'refuser', motif }) }); }
+    if (a === 'supprimer') { if (!confirm('Supprimer définitivement cette activité et ses photos ?')) return;
+      await A('/admin/activites/' + id, { method: 'DELETE' }); }
+    charger();
+  } catch (err) { erreur(err); }
+};
+
+/* ---------- Publier ---------- */
+let photos = [];
+const dessinerApercus = () => $('#apercus').innerHTML = photos.map((p, i) => `<div><img src="${p}" alt=""><button type="button" data-i="${i}">×</button></div>`).join('');
+$('#apercus').onclick = e => { const b = e.target.closest('button'); if (b) { photos.splice(+b.dataset.i, 1); dessinerApercus(); } };
+$('#a-photos').onchange = async e => {
+  for (const f of [...e.target.files]) { if (photos.length >= 4) break; try { photos.push(await reduire(f)); } catch {} }
+  e.target.value = ''; dessinerApercus();
+};
+$('#form-publier').onsubmit = async e => {
+  e.preventDefault();
+  const msg = e.target.querySelector('.alerte'), btn = e.target.querySelector('button:not([type=button])');
+  msg.hidden = true; btn.disabled = true;
+  try {
+    const d = await A('/admin/activites', { method: 'POST', body: JSON.stringify({ titre: $('#a-titre').value, date_activite: $('#a-date').value,
+      lieu: $('#a-lieu').value, texte: $('#a-texte').value, photos }) });
+    message(msg, d.message, 'ok'); e.target.reset(); photos = []; dessinerApercus();
+  } catch (err) { if (err.status === 401) erreur(err); else message(msg, err.message, 'erreur'); }
+  btn.disabled = false;
+};
+
+/* ---------- Volontaires ---------- */
+async function chargerVol() {
+  try {
+    const { volontaires } = await A('/admin/volontaires');
+    $('#liste-vol').innerHTML = volontaires.length ? volontaires.map(v => `
+      <div class="ligne-item" data-id="${v.id}">
+        ${badge(v.statut)} <strong>${esc(v.nom)}</strong> <span class="petit">+${esc(v.telephone)}${v.ville ? ' · ' + esc(v.ville) : ''} · ${v.publiees} publication(s)</span>
+        ${v.email ? `<div class="petit">${esc(v.email)}</div>` : ''}
+        ${v.competences ? `<div class="petit">Compétences : ${esc(v.competences)}</div>` : ''}
+        ${v.motivation ? `<p style="margin:6px 0">${esc(v.motivation)}</p>` : ''}
+        <div class="actions">
+          ${v.statut !== 'actif' ? '<button class="btn btn-vert btn-petit" data-s="actif">Valider</button>' : ''}
+          ${v.statut === 'actif' ? '<button class="btn btn-contour btn-petit" data-s="suspendu">Suspendre</button>' : ''}
+          ${v.statut === 'en_attente' ? '<button class="btn btn-contour btn-petit" data-s="refuse">Refuser</button>' : ''}
+          <a class="btn btn-contour btn-petit" href="https://wa.me/${esc(v.telephone)}" target="_blank" rel="noopener">WhatsApp</a>
+        </div>
+      </div>`).join('') : '<p class="petit">Aucune candidature pour le moment.</p>';
+  } catch (e) { erreur(e); }
+}
+$('#liste-vol').onclick = async e => {
+  const b = e.target.closest('[data-s]'); if (!b) return;
+  try { await A('/admin/volontaires/' + b.closest('[data-id]').dataset.id, { method: 'PATCH', body: JSON.stringify({ statut: b.dataset.s }) }); charger(); }
+  catch (err) { erreur(err); }
+};
+
+/* ---------- Dons ---------- */
+async function chargerDons() {
+  try {
+    const { dons } = await A('/admin/dons');
+    $('#liste-dons').innerHTML = dons.length ? dons.map(d => `
+      <div class="ligne-item" data-id="${d.id}">
+        ${badge(d.statut)} <strong>${montant(d.montant, d.devise)}</strong> <span class="petit">· ${esc(d.reference)} · ${heure(d.cree_le)}</span>
+        <div>${esc(d.nom || 'Sans nom')}${d.anonyme ? ' <span class="petit">(anonyme sur le site)</span>' : ''} — ${esc(d.contact || '')}</div>
+        <div class="petit">${d.mode === 'cinetpay' ? 'Paiement en ligne' : 'Envoi manuel'}${d.operateur ? ' · ' + esc(d.operateur) : ''}${d.ref_paiement && d.mode === 'manuel' ? ' · réf. ' + esc(d.ref_paiement) : ''}${d.projet ? ' · projet : ' + esc(d.projet) : ''}</div>
+        ${d.message ? `<p style="margin:6px 0">« ${esc(d.message)} »</p>` : ''}
+        ${['declare', 'en_attente'].includes(d.statut) && d.mode === 'manuel' ? `<div class="actions">
+          <button class="btn btn-vert btn-petit" data-s="paye">Argent reçu — confirmer</button>
+          <button class="btn btn-contour btn-petit" data-s="annule">Annuler</button></div>` : ''}
+      </div>`).join('') : '<p class="petit">Aucun don pour le moment.</p>';
+  } catch (e) { erreur(e); }
+}
+$('#liste-dons').onclick = async e => {
+  const b = e.target.closest('[data-s]'); if (!b) return;
+  if (b.dataset.s === 'paye' && !confirm("Confirmez-vous avoir bien reçu cet argent sur le compte de l'ONGD ?")) return;
+  try { await A('/admin/dons/' + b.closest('[data-id]').dataset.id, { method: 'PATCH', body: JSON.stringify({ statut: b.dataset.s }) }); charger(); }
+  catch (err) { erreur(err); }
+};
+$('#btn-csv').onclick = async () => {
+  try {
+    const r = await fetch(ONGD.api + '/admin/dons.csv', { headers: { Authorization: 'Bearer ' + token } });
+    if (!r.ok) throw Object.assign(new Error('Export impossible.'), { status: r.status });
+    const url = URL.createObjectURL(await r.blob()), a = document.createElement('a');
+    a.href = url; a.download = 'dons-ongd-les-volontaires.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 2000);
+  } catch (e) { erreur(e); }
+};
+
+/* ---------- Messages ---------- */
+async function chargerMsg() {
+  try {
+    const { messages } = await A('/admin/messages');
+    $('#liste-msg').innerHTML = messages.length ? messages.map(m => `
+      <div class="ligne-item" data-id="${m.id}" style="${m.traite ? 'opacity:.6' : ''}">
+        <span class="statut ${m.traite ? '' : 'en_attente'}">${m.type === 'partenariat' ? 'Partenariat' : 'Contact'}${m.sujet ? ' · ' + esc(m.sujet) : ''}</span>
+        <span class="petit">${heure(m.cree_le)}</span>
+        <h3 style="margin:8px 0 2px">${esc(m.organisation ? m.organisation + ' — ' : '')}${esc(m.nom)}</h3>
+        <div class="petit">${m.email ? `<a href="mailto:${esc(m.email)}">${esc(m.email)}</a>` : ''} ${m.telephone ? esc(m.telephone) : ''}</div>
+        <p class="texte-long" style="margin:6px 0">${esc(m.message)}</p>
+        <div class="actions"><button class="btn btn-contour btn-petit" data-t="${m.traite ? '0' : '1'}">${m.traite ? 'Marquer non traité' : 'Marquer traité'}</button></div>
+      </div>`).join('') : '<p class="petit">Aucun message.</p>';
+  } catch (e) { erreur(e); }
+}
+$('#liste-msg').onclick = async e => {
+  const b = e.target.closest('[data-t]'); if (!b) return;
+  try { await A('/admin/messages/' + b.closest('[data-id]').dataset.id, { method: 'PATCH', body: JSON.stringify({ traite: b.dataset.t === '1' }) }); charger(); }
+  catch (err) { erreur(err); }
+};
+
+/* ================= Paiements communs ================= */
+async function confirmerPaiement(ref, statut) {
+  if (statut === 'paye' && !confirm("Confirmez-vous avoir bien reçu cet argent sur le compte de l'ONGD ?")) return false;
+  try { await A('/admin/paiements/' + ref, { method: 'PATCH', body: JSON.stringify({ statut }) }); return true; } catch (e) { erreur(e); return false; }
+}
+const boutonsPaiement = (x) => ['declare', 'en_attente'].includes(x.statut) && x.mode === 'manuel'
+  ? `<button class="btn btn-vert btn-petit" data-pay="${esc(x.reference)}" data-s="paye">Argent reçu — confirmer</button><button class="btn btn-contour btn-petit" data-pay="${esc(x.reference)}" data-s="annule">Annuler</button>` : '';
+const versLocal = iso => { if (!iso) return ''; const d = new Date(iso); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 16); };
+const versIso = v => v ? new Date(v).toISOString() : null;
+const imageDe = async input => input.files[0] ? await reduire(input.files[0]) : undefined;
+
+/* ================= Formations et événements ================= */
+let programmes = [], progEdite = null;
+async function chargerProg() {
+  $('#inscrits').hidden = true; $('#liste-prog').hidden = false;
+  try {
+    ({ programmes } = await A('/admin/programmes'));
+    $('#liste-prog').innerHTML = programmes.length ? programmes.map(p => `
+      <div class="ligne-item" data-id="${p.id}">
+        ${badge(p.statut)} <span class="etiquette">${p.type === 'formation' ? 'Formation' : 'Événement'}</span>
+        <h3 style="margin:8px 0 2px">${esc(p.titre)}</h3>
+        <div class="petit">${p.debut ? heure(p.debut) : 'Date à confirmer'} · ${p.en_ligne ? 'En ligne' : esc(p.lieu || '')} · ${p.prix_usd ? p.prix_usd + ' $' : 'Gratuit'}
+          · ${p.confirmes}${p.places ? '/' + p.places : ''} inscrit(s) · ${p.etapes.length} étape(s)</div>
+        ${p.a_verifier ? `<div class="alerte info">${p.a_verifier} paiement(s) déclaré(s) à vérifier</div>` : ''}
+        <div class="actions"><button class="btn btn-vert btn-petit" data-a="inscrits">Inscrits</button><button class="btn btn-contour btn-petit" data-a="modifier">Modifier</button>
+          <button class="btn btn-contour btn-petit" data-a="supprimer" style="color:var(--rouge)">Supprimer</button></div>
+      </div>`).join('') : '<p class="petit">Aucune formation ni événement. Créez le premier.</p>';
+  } catch (e) { erreur(e); }
+}
+function ligneEtape(e = {}) {
+  const d = document.createElement('fieldset');
+  d.className = 'carte'; d.style.cssText = 'margin-bottom:10px;padding:14px';
+  d.innerHTML = `<div class="champ"><label>Titre de l'étape</label><input data-e="titre" maxlength="150" value="${esc(e.titre || '')}"></div>
+    <div class="champ"><label>Contenu</label><textarea data-e="contenu" rows="5">${esc(e.contenu || '')}</textarea></div>
+    <div class="champ"><label>Lien vidéo <span class="facultatif">(YouTube…)</span></label><input data-e="video_url" type="url" value="${esc(e.video_url || '')}" placeholder="https://"></div>
+    <button type="button" class="btn btn-contour btn-petit" data-monter>↑ Monter</button> <button type="button" class="btn btn-contour btn-petit" data-retirer style="color:var(--rouge)">Retirer</button>`;
+  return d;
+}
+$('#etapes').onclick = e => {
+  const fs = e.target.closest('fieldset'); if (!fs) return;
+  if (e.target.closest('[data-retirer]')) fs.remove();
+  if (e.target.closest('[data-monter]') && fs.previousElementSibling) fs.parentNode.insertBefore(fs, fs.previousElementSibling);
+};
+$('#ajout-etape').onclick = () => $('#etapes').append(ligneEtape());
+function ouvrirFormProg(p) {
+  progEdite = p ? p.id : null;
+  const f = $('#form-prog'); f.reset(); f.hidden = false; f.querySelector('.alerte').hidden = true;
+  $('#titre-form-prog').textContent = p ? 'Modifier : ' + p.titre : 'Nouvelle formation / événement';
+  $('#etapes').innerHTML = '';
+  if (p) {
+    for (const k of ['type', 'statut', 'titre', 'resume', 'description', 'lieu', 'places', 'prix_usd']) f[k].value = p[k] ?? '';
+    f.en_ligne.checked = p.en_ligne; f.debut.value = versLocal(p.debut); f.fin.value = versLocal(p.fin);
+    p.etapes.forEach(e => $('#etapes').append(ligneEtape(e)));
+  }
+  f.scrollIntoView({ behavior: 'smooth' });
+}
+$('#btn-nouv-prog').onclick = () => ouvrirFormProg(null);
+$('#annuler-prog').onclick = () => $('#form-prog').hidden = true;
+$('#form-prog').onsubmit = async e => {
+  e.preventDefault();
+  const f = e.target, msg = f.querySelector('.alerte'), btn = f.querySelector('button:not([type=button])');
+  btn.disabled = true;
+  try {
+    const corps = { type: f.type.value, statut: f.statut.value, titre: f.titre.value, resume: f.resume.value, description: f.description.value,
+      lieu: f.lieu.value, en_ligne: f.en_ligne.checked, debut: versIso(f.debut.value), fin: versIso(f.fin.value), places: f.places.value, prix_usd: f.prix_usd.value || 0,
+      image: await imageDe(f.image),
+      etapes: [...$('#etapes').querySelectorAll('fieldset')].map(fs => Object.fromEntries([...fs.querySelectorAll('[data-e]')].map(x => [x.dataset.e, x.value]))) };
+    const d = await A(progEdite ? '/admin/programmes/' + progEdite : '/admin/programmes', { method: progEdite ? 'PATCH' : 'POST', body: JSON.stringify(corps) });
+    message(msg, d.message, 'ok'); f.hidden = true; chargerProg();
+  } catch (err) { if (err.status === 401) erreur(err); else message(msg, err.message, 'erreur'); }
+  btn.disabled = false;
+};
+$('#liste-prog').onclick = async e => {
+  const b = e.target.closest('[data-a]'); if (!b) return;
+  const p = programmes.find(x => x.id == b.closest('[data-id]').dataset.id);
+  if (b.dataset.a === 'modifier') ouvrirFormProg(p);
+  if (b.dataset.a === 'supprimer' && confirm('Supprimer « ' + p.titre + ' » ?')) { try { const d = await A('/admin/programmes/' + p.id, { method: 'DELETE' }); alert(d.message); chargerProg(); } catch (err) { erreur(err); } }
+  if (b.dataset.a === 'inscrits') voirInscrits(p);
+};
+async function voirInscrits(p) {
+  try {
+    const { inscriptions } = await A(`/admin/programmes/${p.id}/inscriptions`);
+    $('#liste-prog').hidden = true; $('#inscrits').hidden = false;
+    $('#inscrits').innerHTML = `<button class="btn btn-contour btn-petit" id="retour-prog">← Retour</button>
+      <button class="btn btn-contour btn-petit" id="csv-inscrits">Télécharger la liste (CSV)</button>
+      <h3 style="margin-top:14px">${esc(p.titre)} — ${inscriptions.length} inscription(s)</h3>
+      ${inscriptions.map(i => `<div class="ligne-item" data-i="${i.id}">
+        ${badge(i.statut)} <strong>${esc(i.nom)}</strong> <span class="petit">+${esc(i.telephone)} · code ${esc(i.code)} · ${i.places} place(s)
+        ${i.montant ? '· ' + montant(i.montant, i.devise) : '· gratuit'}${p.type === 'formation' ? ` · ${i.etapes_faites}/${p.etapes.length} étapes` : ''}${i.ref_paiement && i.mode === 'manuel' ? ' · réf. ' + esc(i.ref_paiement) : ''}</span>
+        <div class="actions">
+          ${boutonsPaiement(i)}
+          ${i.statut === 'confirme' ? `<label class="case"><input type="checkbox" data-present ${i.present ? 'checked' : ''}> Présent</label>` : ''}
+          <a class="btn btn-contour btn-petit" href="https://wa.me/${esc(i.telephone)}" target="_blank" rel="noopener">WhatsApp</a>
+        </div></div>`).join('') || '<p class="petit">Personne pour le moment.</p>'}`;
+    $('#retour-prog').onclick = chargerProg;
+    $('#csv-inscrits').onclick = () => telecharger(`/admin/programmes/${p.id}/inscriptions?csv=1`, 'inscriptions.csv');
+    $('#inscrits').onclick = async e => {
+      const pay = e.target.closest('[data-pay]');
+      if (pay && await confirmerPaiement(pay.dataset.pay, pay.dataset.s)) voirInscrits(p);
+    };
+    $('#inscrits').onchange = async e => {
+      if (!e.target.matches('[data-present]')) return;
+      try { await A('/admin/inscriptions/' + e.target.closest('[data-i]').dataset.i, { method: 'PATCH', body: JSON.stringify({ present: e.target.checked }) }); } catch (err) { erreur(err); }
+    };
+  } catch (e) { erreur(e); }
+}
+$('#form-entree').onsubmit = async e => {
+  e.preventDefault();
+  try {
+    const i = await A('/admin/inscriptions/verifier', { method: 'POST', body: JSON.stringify({ code: e.target.code.value }) });
+    $('#resultat-entree').innerHTML = `<div class="alerte ${i.statut === 'confirme' ? 'ok' : 'erreur'}">${esc(i.nom)} — ${esc(i.titre)} — ${i.places} place(s) — ${STATUTS[i.statut] || i.statut}${i.present ? ' — déjà enregistré présent' : ''}
+      ${i.statut === 'confirme' && !i.present ? `<button class="btn btn-vert btn-petit" id="marquer-present" style="margin-left:8px">Marquer présent</button>` : ''}</div>`;
+    const b = $('#marquer-present');
+    if (b) b.onclick = async () => { await A('/admin/inscriptions/' + i.id, { method: 'PATCH', body: JSON.stringify({ present: true }) }); b.replaceWith('✓ Présent'); };
+  } catch (err) { $('#resultat-entree').innerHTML = `<div class="alerte erreur">${esc(err.message)}</div>`; }
+};
+async function telecharger(chemin, nom) {
+  try {
+    const r = await fetch(ONGD.api + chemin, { headers: { Authorization: 'Bearer ' + token } });
+    if (!r.ok) throw Object.assign(new Error('Export impossible.'), { status: r.status });
+    const url = URL.createObjectURL(await r.blob()), a = document.createElement('a');
+    a.href = url; a.download = nom; a.click(); setTimeout(() => URL.revokeObjectURL(url), 2000);
+  } catch (e) { erreur(e); }
+}
+
+/* ================= Boutique ================= */
+let vueBout = 'commandes', produitsAdmin = [], produitEdite = null;
+$('#filtre-bout').onclick = e => { const b = e.target.closest('button'); if (!b) return; vueBout = b.dataset.v;
+  document.querySelectorAll('#filtre-bout button').forEach(x => x.classList.toggle('actif', x === b)); chargerBoutique(); };
+async function chargerBoutique() {
+  $('#vue-commandes').hidden = vueBout !== 'commandes'; $('#vue-produits').hidden = vueBout !== 'produits';
+  try {
+    if (vueBout === 'commandes') {
+      const { commandes } = await A('/admin/commandes');
+      $('#vue-commandes').innerHTML = commandes.map(c => `<div class="ligne-item">
+        ${badge(c.statut)} <strong>${montant(c.montant, c.devise)}</strong> <span class="petit">· ${esc(c.reference)} · ${heure(c.cree_le)}</span>
+        <div>${esc(c.nom)} — ${esc(c.contact)}</div>
+        <div class="petit">${c.articles.map(a => a.qte + ' × ' + esc(a.nom)).join(', ')} · ${esc(c.livraison || '')}${c.ref_paiement && c.mode === 'manuel' ? ' · réf. ' + esc(c.ref_paiement) : ''}</div>
+        <div class="actions">${boutonsPaiement(c)}${c.statut === 'payee' ? `<button class="btn btn-vert btn-petit" data-livree="${c.id}">Marquer livrée</button>` : ''}</div>
+      </div>`).join('') || '<p class="petit">Aucune commande pour le moment.</p>';
+    } else {
+      ({ produits: produitsAdmin } = await A('/admin/produits'));
+      $('#liste-produits').innerHTML = produitsAdmin.map(p => `<div class="ligne-item" data-p="${p.id}" style="${p.actif ? '' : 'opacity:.55'}">
+        ${p.a_image ? `<img src="${ONGD.api}/media/produit/${p.id}" alt="" style="width:60px;height:60px;object-fit:cover;border-radius:8px;float:left;margin-right:10px">` : ''}
+        <strong>${esc(p.nom)}</strong> <span class="petit">· ${p.prix_usd} $ · stock ${p.stock ?? 'illimité'}${p.actif ? '' : ' · retiré'}</span>
+        <div class="actions" style="clear:both"><button class="btn btn-contour btn-petit" data-modif>Modifier</button>${p.actif ? '<button class="btn btn-contour btn-petit" data-retirer style="color:var(--rouge)">Retirer de la boutique</button>' : ''}</div>
+      </div>`).join('') || '<p class="petit">Aucun produit.</p>';
+    }
+  } catch (e) { erreur(e); }
+}
+$('#vue-commandes').onclick = async e => {
+  const pay = e.target.closest('[data-pay]'), liv = e.target.closest('[data-livree]');
+  if (pay && await confirmerPaiement(pay.dataset.pay, pay.dataset.s)) charger();
+  if (liv) { try { await A('/admin/commandes/' + liv.dataset.livree, { method: 'PATCH', body: JSON.stringify({ statut: 'livree' }) }); charger(); } catch (err) { erreur(err); } }
+};
+$('#liste-produits').onclick = async e => {
+  const el = e.target.closest('[data-p]'); if (!el) return;
+  const p = produitsAdmin.find(x => x.id == el.dataset.p), f = $('#form-produit');
+  if (e.target.closest('[data-modif]')) {
+    produitEdite = p.id; f.nom.value = p.nom; f.description.value = p.description || ''; f.prix_usd.value = p.prix_usd; f.stock.value = p.stock ?? '';
+    $('#titre-form-produit').textContent = 'Modifier : ' + p.nom; $('#annuler-produit').hidden = false; f.scrollIntoView({ behavior: 'smooth' });
+  }
+  if (e.target.closest('[data-retirer]') && confirm('Retirer « ' + p.nom + ' » de la boutique ?')) { try { await A('/admin/produits/' + p.id, { method: 'DELETE' }); chargerBoutique(); } catch (err) { erreur(err); } }
+};
+const finEditionProduit = () => { produitEdite = null; $('#form-produit').reset(); $('#titre-form-produit').textContent = 'Ajouter un produit'; $('#annuler-produit').hidden = true; };
+$('#annuler-produit').onclick = finEditionProduit;
+$('#form-produit').onsubmit = async e => {
+  e.preventDefault();
+  const f = e.target, msg = f.querySelector('.alerte'), btn = f.querySelector('button:not([type=button])'); btn.disabled = true;
+  try {
+    const d = await A(produitEdite ? '/admin/produits/' + produitEdite : '/admin/produits', { method: produitEdite ? 'PATCH' : 'POST',
+      body: JSON.stringify({ nom: f.nom.value, description: f.description.value, prix_usd: f.prix_usd.value, stock: f.stock.value, actif: true, image: await imageDe(f.image) }) });
+    message(msg, d.message, 'ok'); finEditionProduit(); chargerBoutique();
+  } catch (err) { if (err.status === 401) erreur(err); else message(msg, err.message, 'erreur'); }
+  btn.disabled = false;
+};
+
+/* ================= Annonces ================= */
+async function chargerAnnonces() {
+  try {
+    const { annonces } = await A('/admin/annonces');
+    $('#liste-annonces').innerHTML = annonces.map(a => `<div class="ligne-item" data-an="${a.id}">
+      ${a.expiree ? '<span class="statut annule">Expirée</span>' : badge(a.statut)} <strong>${montant(a.montant, a.devise)}</strong> <span class="petit">· ${a.jours} jours · ${esc(a.reference)} · ${heure(a.cree_le)}</span>
+      <div class="annonce" style="margin:8px 0">${a.a_image ? `<img src="${ONGD.api}/media/annonce/${a.id}?t=${token}" alt="">` : ''}<span><small>Annonce · ${esc(a.annonceur)}</small><strong>${esc(a.titre)}</strong>${a.texte ? `<em>${esc(a.texte)}</em>` : ''}</span></div>
+      <div class="petit">Contact : ${esc(a.contact)}${a.lien ? ` · lien : <a href="${esc(a.lien)}" target="_blank" rel="noopener">${esc(a.lien)}</a>` : ''}${a.fin ? ' · en ligne jusqu\'au ' + heure(a.fin) : ''}${a.motif ? ' · motif : ' + esc(a.motif) : ''}</div>
+      <div class="actions">${boutonsPaiement(a)}
+        ${a.statut === 'payee' ? '<button class="btn btn-vert btn-petit" data-act="activer">Valider et mettre en ligne</button>' : ''}
+        ${['payee', 'declare'].includes(a.statut) ? '<button class="btn btn-contour btn-petit" data-act="refuser">Refuser</button>' : ''}
+        ${a.statut === 'active' && !a.expiree ? '<button class="btn btn-contour btn-petit" data-act="arreter">Arrêter la diffusion</button>' : ''}</div>
+    </div>`).join('') || '<p class="petit">Aucune annonce pour le moment.</p>';
+  } catch (e) { erreur(e); }
+}
+$('#liste-annonces').onclick = async e => {
+  const pay = e.target.closest('[data-pay]'), act = e.target.closest('[data-act]');
+  if (pay && await confirmerPaiement(pay.dataset.pay, pay.dataset.s)) return charger();
+  if (!act) return;
+  let motif;
+  if (act.dataset.act === 'refuser') { motif = prompt("Motif du refus (pensez à rembourser l'annonceur) :"); if (motif === null) return; }
+  try { await A('/admin/annonces/' + act.closest('[data-an]').dataset.an, { method: 'PATCH', body: JSON.stringify({ action: act.dataset.act, motif }) }); charger(); } catch (err) { erreur(err); }
+};
+
+/* ================= Dialogue ================= */
+async function chargerSujets() {
+  try {
+    const { sujets } = await A('/admin/sujets');
+    $('#liste-sujets').innerHTML = sujets.map(s => `<div class="ligne-item" data-su="${s.id}">
+      ${badge(s.statut)} ${s.epingle ? '<span class="etiquette or">Épinglé</span>' : ''} <span class="etiquette">${esc(s.categorie)}</span>
+      <h3 style="margin:8px 0 2px">${esc(s.titre)}</h3><div class="petit">par ${esc(s.nom)} · ${heure(s.cree_le)}</div>
+      <p class="texte-long" style="margin:6px 0">${esc(s.message)}</p>
+      ${s.reponses.map(r => `<div class="message-fil${r.admin ? ' admin' : r.auto ? ' auto' : ''}" data-rep="${r.id}" style="${r.statut === 'masque' ? 'opacity:.5' : ''}">
+        <span class="auteur">${esc(r.nom)}</span> <span class="petit">${heure(r.cree_le)}${r.statut === 'masque' ? ' · masquée' : ''}</span>
+        <p class="texte-long" style="margin:4px 0">${esc(r.message)}</p>
+        <button class="btn btn-contour btn-petit" data-rep-statut="${r.statut === 'masque' ? 'visible' : 'masque'}">${r.statut === 'masque' ? 'Afficher' : 'Masquer'}</button></div>`).join('')}
+      <form class="rep-admin" style="display:flex;gap:6px;margin-top:8px" novalidate><input name="message" placeholder="Répondre au nom de l'ONGD…"><button class="btn btn-vert btn-petit">Répondre</button></form>
+      <div class="actions">
+        <button class="btn btn-contour btn-petit" data-su-a="epingle">${s.epingle ? 'Désépingler' : 'Épingler'}</button>
+        <button class="btn btn-contour btn-petit" data-su-a="statut">${s.statut === 'masque' ? 'Afficher' : 'Masquer'}</button>
+        <button class="btn btn-contour btn-petit" data-su-a="supprimer" style="color:var(--rouge)">Supprimer</button>
+      </div></div>`).join('') || '<p class="petit">Aucun sujet pour le moment.</p>';
+    $('#liste-sujets').querySelectorAll('.rep-admin').forEach(f => f.onsubmit = async e => {
+      e.preventDefault();
+      try { await A(`/admin/sujets/${f.closest('[data-su]').dataset.su}/reponses`, { method: 'POST', body: JSON.stringify({ message: f.message.value }) }); chargerSujets(); } catch (err) { erreur(err); }
+    });
+  } catch (e) { erreur(e); }
+}
+$('#liste-sujets').onclick = async e => {
+  const el = e.target.closest('[data-su]'); if (!el) return;
+  const id = el.dataset.su, a = e.target.closest('[data-su-a]'), r = e.target.closest('[data-rep-statut]');
+  try {
+    if (r) await A('/admin/reponses/' + r.closest('[data-rep]').dataset.rep, { method: 'PATCH', body: JSON.stringify({ statut: r.dataset.repStatut }) });
+    else if (a?.dataset.suA === 'epingle') await A('/admin/sujets/' + id, { method: 'PATCH', body: JSON.stringify({ epingle: a.textContent === 'Épingler' }) });
+    else if (a?.dataset.suA === 'statut') await A('/admin/sujets/' + id, { method: 'PATCH', body: JSON.stringify({ statut: a.textContent === 'Masquer' ? 'masque' : 'visible' }) });
+    else if (a?.dataset.suA === 'supprimer') { if (!confirm('Supprimer ce sujet et ses réponses ?')) return; await A('/admin/sujets/' + id, { method: 'DELETE' }); }
+    else return;
+    chargerSujets();
+  } catch (err) { erreur(err); }
+};
+
+/* ================= Direct ================= */
+async function chargerDirects() {
+  try {
+    const { directs } = await A('/admin/directs');
+    $('#liste-directs').innerHTML = directs.map(d => `<div class="ligne-item" data-di="${d.id}">
+      ${d.statut === 'en_cours' ? '<span class="badge-direct"><span class="point-rouge"></span>En direct</span>' : badge(d.statut)}
+      <span class="etiquette">${d.type === 'reunion' ? 'Réunion' : 'Live'}</span>${d.prive ? ' <span class="etiquette rouge">Avec code</span>' : ''}
+      <h3 style="margin:8px 0 2px">${esc(d.titre)}</h3><div class="petit">${d.debut ? heure(d.debut) : ''} · par ${esc(d.auteur)} · <a href="${esc(d.url)}" target="_blank" rel="noopener">${esc(d.url)}</a></div>
+      <div class="actions">
+        ${d.statut === 'prevu' ? '<button class="btn btn-vert btn-petit" data-st="en_cours">Démarrer maintenant</button>' : ''}
+        ${d.statut === 'en_cours' ? '<button class="btn btn-contour btn-petit" data-st="termine">Terminer</button>' : ''}
+        <button class="btn btn-contour btn-petit" data-st="supprimer" style="color:var(--rouge)">Supprimer</button>
+      </div></div>`).join('') || '<p class="petit">Aucun direct programmé.</p>';
+  } catch (e) { erreur(e); }
+}
+$('#liste-directs').onclick = async e => {
+  const b = e.target.closest('[data-st]'); if (!b) return;
+  const id = b.closest('[data-di]').dataset.di;
+  try {
+    if (b.dataset.st === 'supprimer') { if (!confirm('Supprimer ?')) return; await A('/admin/directs/' + id, { method: 'DELETE' }); }
+    else await A('/admin/directs/' + id, { method: 'PATCH', body: JSON.stringify({ statut: b.dataset.st }) });
+    chargerDirects();
+  } catch (err) { erreur(err); }
+};
+$('#form-direct').onsubmit = async e => {
+  e.preventDefault();
+  const f = e.target, msg = f.querySelector('.alerte'), btn = f.querySelector('button'); btn.disabled = true;
+  try {
+    const d = await A('/admin/directs', { method: 'POST', body: JSON.stringify({ type: f.type.value, titre: f.titre.value, description: f.description.value,
+      debut: versIso(f.debut.value), lien: f.lien.value, code: f.code.value, maintenant: f.maintenant.checked }) });
+    message(msg, d.message + ' Lien : ' + d.url, 'ok'); f.reset(); chargerDirects();
+  } catch (err) { if (err.status === 401) erreur(err); else message(msg, err.message, 'erreur'); }
+  btn.disabled = false;
+};
+
+/* ================= Réglages ================= */
+async function chargerReglages() {
+  try {
+    const { reglages: r, ia, paiement_en_ligne } = await A('/admin/reglages');
+    $('#etat-services').innerHTML = `Assistant IA : <strong>${ia ? 'actif' : 'inactif (ajoutez ANTHROPIC_API_KEY dans Railway)'}</strong> · Paiement en ligne CinetPay : <strong>${paiement_en_ligne ? 'actif' : 'inactif'}</strong>`;
+    const f = $('#form-reglages');
+    f.taux_cdf.value = r.taux_cdf; f.infos_ia.value = r.infos_ia || ''; f.reponses_auto.checked = !!r.reponses_auto; f.mots_interdits.value = (r.mots_interdits || []).join(', ');
+    const fo = [...r.forfaits_annonces]; while (fo.length < 3) fo.push({ jours: '', prix_usd: '' });
+    $('#forfaits-admin').innerHTML = fo.map(x => `<div class="deux" data-forfait><div class="champ"><input type="number" min="1" data-j value="${x.jours}" placeholder="jours"></div>
+      <div class="champ"><input type="number" min="1" data-p value="${x.prix_usd}" placeholder="prix en $"></div></div>`).join('');
+  } catch (e) { erreur(e); }
+}
+$('#form-reglages').onsubmit = async e => {
+  e.preventDefault();
+  const f = e.target, msg = f.querySelector('.alerte');
+  try {
+    const d = await A('/admin/reglages', { method: 'PATCH', body: JSON.stringify({ taux_cdf: f.taux_cdf.value, infos_ia: f.infos_ia.value, reponses_auto: f.reponses_auto.checked,
+      mots_interdits: f.mots_interdits.value,
+      forfaits_annonces: [...document.querySelectorAll('[data-forfait]')].map(x => ({ jours: x.querySelector('[data-j]').value, prix_usd: x.querySelector('[data-p]').value })).filter(x => x.jours && x.prix_usd) }) });
+    message(msg, d.message, 'ok');
+  } catch (err) { if (err.status === 401) erreur(err); else message(msg, err.message, 'erreur'); }
+};
+
+/* ================= Sécurité ================= */
+async function chargerSecurite() {
+  try {
+    const s = await A('/admin/securite');
+    $('#etat-2fa').innerHTML = s.double_auth
+      ? `<div class="alerte ok">Activée : un code à 6 chiffres de votre application est demandé à chaque connexion.</div>
+         <form id="form-2fa-off" style="display:flex;gap:6px;margin-top:8px" novalidate><input name="code" inputmode="numeric" maxlength="6" placeholder="Code actuel" style="max-width:160px"><button class="btn btn-contour btn-petit">Désactiver</button></form>`
+      : `<div class="alerte info">Non activée. Recommandé : même avec votre mot de passe, personne ne peut entrer sans votre téléphone.</div>
+         <button class="btn btn-vert btn-petit" id="btn-2fa">Activer la double authentification</button>`;
+    if (s.secours) $('#etat-2fa').insertAdjacentHTML('beforeend', '<div class="alerte erreur">Mode secours actif (ONGD_2FA_SECOURS=1) : retirez cette variable de Railway dès que possible.</div>');
+    $('#sessions').textContent = s.sessions.map(x => `${x.n} session(s) ${x.role === 'admin' ? 'administrateur' : 'volontaire'}`).join(' · ') || 'Aucune autre session.';
+    const LIB = { connexion_admin: 'Connexion admin', echec_connexion_admin: '⚠ Échec de connexion admin', echec_connexion_volontaire: '⚠ Échec de connexion volontaire',
+      '2fa_activee': 'Double authentification activée', '2fa_desactivee': 'Double authentification désactivée', deconnexion_generale: 'Déconnexion de tous les appareils',
+      paiement_incoherent: '⚠ Paiement incohérent', reglages_modifies: 'Réglages modifiés' };
+    $('#journal').innerHTML = s.journal.map(j => `<div class="ligne-item" style="padding:8px 0"><strong>${esc(LIB[j.type] || j.type.replace(/_/g, ' '))}</strong> <span class="petit">· ${heure(j.cree_le)} · ${esc(j.ip || '')}${j.detail ? ' · ' + esc(j.detail) : ''}</span></div>`).join('') || '<p class="petit">Rien à signaler.</p>';
+    const b = $('#btn-2fa');
+    if (b) b.onclick = async () => {
+      const p = await A('/admin/securite/2fa/preparer', { method: 'POST' });
+      $('#config-2fa').innerHTML = `<div class="carte" style="margin-top:12px">
+        <p>1. Installez <strong>Google Authenticator</strong> (ou Microsoft Authenticator) sur votre téléphone.</p>
+        <p>2. Scannez ce code, ou choisissez « Saisir une clé » et tapez :</p>
+        <div id="qr-2fa" style="background:#fff;padding:10px;display:inline-block;border-radius:8px"></div>
+        <p class="ref" style="word-break:break-all">${esc(p.secret)}</p>
+        <p>3. Entrez le code à 6 chiffres affiché par l'application :</p>
+        <form id="form-2fa-on" style="display:flex;gap:6px" novalidate><input name="code" inputmode="numeric" maxlength="6" style="max-width:160px"><button class="btn btn-vert btn-petit">Activer</button></form>
+        <div class="alerte" hidden></div></div>`;
+      if (window.QRCode) new QRCode($('#qr-2fa'), { text: p.uri, width: 180, height: 180 }); else $('#qr-2fa').remove();
+      $('#form-2fa-on').onsubmit = async e => {
+        e.preventDefault();
+        try { const d = await A('/admin/securite/2fa/activer', { method: 'POST', body: JSON.stringify({ code: e.target.code.value }) }); $('#config-2fa').innerHTML = ''; alert(d.message); chargerSecurite(); }
+        catch (err) { message($('#config-2fa .alerte'), err.message, 'erreur'); }
+      };
+    };
+    const off = $('#form-2fa-off');
+    if (off) off.onsubmit = async e => {
+      e.preventDefault();
+      try { const d = await A('/admin/securite/2fa/desactiver', { method: 'POST', body: JSON.stringify({ code: e.target.code.value }) }); alert(d.message); chargerSecurite(); } catch (err) { erreur(err); }
+    };
+  } catch (e) { erreur(e); }
+}
+$('#btn-tout-deco').onclick = async () => {
+  if (!confirm('Déconnecter tous les autres appareils (administrateur et volontaires) ?')) return;
+  try { const d = await A('/admin/securite/deconnecter-tout', { method: 'POST' }); alert(d.message); chargerSecurite(); } catch (e) { erreur(e); }
+};
+
+function demarrer() { montrer(true); charger(); }
+if (token) demarrer(); else montrer(false);
+</script>
+</body>
+</html>

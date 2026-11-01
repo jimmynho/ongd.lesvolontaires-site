@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://eajimmy-production.up.railway.app; connect-src 'self' https://eajimmy-production.up.railway.app; frame-src https://www.youtube.com https://www.youtube-nocookie.com; base-uri 'self'; form-action 'self'; object-src 'none'">
+<title>Boutique — ONGD Les Volontaires</title>
+<meta name="description" content="Boutique solidaire de l'ONGD Les Volontaires : chaque achat soutient nos actions.">
+<meta name="theme-color" content="#10392a">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+</head>
+<body>
+<header data-commun></header>
+<main>
+  <section class="tete-page">
+    <div class="conteneur">
+      <span class="sur-titre">Boutique solidaire</span>
+      <h1>Achetez utile</h1>
+      <p>Chaque achat soutient les actions de l'ONGD. Paiement par Mobile Money ou carte, retrait au siège ou livraison.</p>
+    </div>
+  </section>
+  <section>
+    <div class="conteneur">
+      <div class="grille-3" id="produits"></div>
+    </div>
+  </section>
+  <div class="conteneur zone-annonces" data-annonces></div>
+</main>
+<footer data-commun></footer>
+<a class="whatsapp" href="https://wa.me/243850171480" target="_blank" rel="noopener" aria-label="WhatsApp"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2z"/></svg></a>
+
+<div class="barre-panier" id="barre" hidden>
+  <span><strong id="nb-articles">0</strong> article(s) · <strong id="total-barre">0 $</strong></span>
+  <button class="btn btn-don btn-petit" id="btn-commander">Commander</button>
+</div>
+
+<dialog id="dlg">
+  <button class="dlg-fermer" aria-label="Fermer" onclick="this.closest('dialog').close()">×</button>
+  <div class="dlg-corps">
+    <h2>Mon panier</h2>
+    <div id="lignes"></div>
+    <form id="form-cmd" novalidate>
+      <input name="site_web" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
+      <div class="deux">
+        <div class="champ"><label>Nom complet</label><input name="nom" required autocomplete="name"></div>
+        <div class="champ"><label>Téléphone ou e-mail</label><input name="contact" required autocomplete="tel" placeholder="+243…"></div>
+      </div>
+      <div class="champ"><label>Réception</label>
+        <select name="mode_livraison"><option value="Retrait au siège (avenue Mobutu, Mbandaka)">Retrait au siège, Mbandaka</option><option value="livraison">Livraison à mon adresse</option></select>
+      </div>
+      <div class="champ" id="champ-adresse" hidden><label>Adresse de livraison</label><input name="adresse" placeholder="Commune, quartier, avenue, numéro"></div>
+      <div class="champ"><label>Payer en</label><select name="devise"><option value="USD">Dollars</option><option value="CDF">Francs congolais</option></select></div>
+      <p>Total : <span class="prix" id="total-dlg"></span></p>
+      <button class="btn btn-don" style="width:100%">Continuer vers le paiement</button>
+      <div class="alerte" hidden></div>
+    </form>
+    <div id="suite"></div>
+  </div>
+</dialog>
+
+<script src="commun.js"></script>
+<script>
+const { esc, api, montant, message, lire, ecrire } = outils;
+const $ = s => document.querySelector(s);
+let produits = [], panier = {};
+try { panier = JSON.parse(lire('ongd_panier') || '{}'); } catch {}
+
+async function charger() {
+  try { produits = (await api('/produits')).produits; }
+  catch (e) { $('#produits').innerHTML = `<div class="vide">${esc(e.message)}</div>`; return; }
+  for (const id of Object.keys(panier)) if (!produits.find(p => p.id == id)) delete panier[id];
+  dessiner();
+}
+function dessiner() {
+  $('#produits').innerHTML = produits.length ? produits.map(p => {
+    const q = panier[p.id] || 0, epuise = p.stock === 0;
+    return `<div class="carte activite produit" style="cursor:default">
+      <div class="image" style="${p.a_image ? `background-image:url('${ONGD.api}/media/produit/${p.id}')` : ''}">${p.a_image ? '' : 'Les Volontaires'}</div>
+      <div class="corps">
+        <h3>${esc(p.nom)}</h3>
+        ${p.description ? `<p>${esc(p.description)}</p>` : ''}
+        <div class="prix" style="margin:10px 0">${p.prix_usd} $ <span class="petit">· ${montant(p.prix_cdf, 'CDF')}</span></div>
+        ${epuise ? '<span class="etiquette rouge">Épuisé</span>' : q ? `<div class="quantite"><button data-moins="${p.id}" aria-label="Retirer">−</button><span>${q}</span><button data-plus="${p.id}" aria-label="Ajouter">+</button></div>`
+          : `<button class="btn btn-vert btn-petit" data-plus="${p.id}">Ajouter au panier</button>`}
+        ${p.stock != null && p.stock > 0 && p.stock <= 5 ? `<p class="petit">Plus que ${p.stock} en stock</p>` : ''}
+      </div></div>`;
+  }).join('') : '<div class="vide">La boutique ouvre bientôt.</div>';
+  const n = Object.values(panier).reduce((s, x) => s + x, 0);
+  $('#barre').hidden = !n; document.body.classList.toggle('avec-barre', !!n);
+  $('#nb-articles').textContent = n; $('#total-barre').textContent = total() + ' $';
+  ecrire('ongd_panier', JSON.stringify(panier));
+}
+const total = () => Object.entries(panier).reduce((s, [id, q]) => s + q * (produits.find(p => p.id == id)?.prix_usd || 0), 0);
+$('#produits').onclick = e => {
+  const plus = e.target.closest('[data-plus]'), moins = e.target.closest('[data-moins]');
+  if (plus) { const p = produits.find(x => x.id == plus.dataset.plus); const q = (panier[p.id] || 0) + 1; if (p.stock != null && q > p.stock) return commun.toast('Stock insuffisant.'); panier[p.id] = q; }
+  if (moins) { const id = moins.dataset.moins; panier[id]--; if (panier[id] <= 0) delete panier[id]; }
+  dessiner();
+};
+function majTotal() {
+  const f = $('#form-cmd'), t = total();
+  $('#total-dlg').textContent = f.devise.value === 'USD' ? t + ' $' : montant(Math.ceil(t * (produits[0]?.prix_cdf / produits[0]?.prix_usd || 2850) / 5) * 5, 'CDF') + ' (environ)';
+}
+$('#btn-commander').onclick = () => {
+  $('#lignes').innerHTML = Object.entries(panier).map(([id, q]) => { const p = produits.find(x => x.id == id);
+    return `<div class="ligne-item" style="display:flex;justify-content:space-between;gap:10px"><span>${q} × ${esc(p.nom)}</span><strong>${q * p.prix_usd} $</strong></div>`; }).join('');
+  const f = $('#form-cmd'); f.hidden = false; $('#suite').innerHTML = '';
+  f.nom.value = lire('ongd_nom') || ''; majTotal();
+  $('#dlg').showModal();
+};
+$('#form-cmd').devise.onchange = majTotal;
+$('#form-cmd').mode_livraison.onchange = e => $('#champ-adresse').hidden = e.target.value !== 'livraison';
+$('#form-cmd').onsubmit = async e => {
+  e.preventDefault();
+  const f = e.target, msg = f.querySelector('.alerte'), btn = f.querySelector('button');
+  msg.hidden = true;
+  const livraison = f.mode_livraison.value === 'livraison' ? 'Livraison : ' + f.adresse.value.trim() : f.mode_livraison.value;
+  if (f.mode_livraison.value === 'livraison' && f.adresse.value.trim().length < 5) return message(msg, 'Indiquez votre adresse de livraison.', 'erreur');
+  btn.disabled = true;
+  try {
+    const d = await api('/commandes', { method: 'POST', body: JSON.stringify({ nom: f.nom.value, contact: f.contact.value, livraison, devise: f.devise.value,
+      site_web: f.site_web.value, articles: Object.entries(panier).map(([id, qte]) => ({ id: +id, qte })) }) });
+    ecrire('ongd_nom', f.nom.value);
+    panier = {}; dessiner(); f.hidden = true;
+    commun.paiement($('#suite'), d);
+  } catch (err) { message(msg, err.message, 'erreur'); }
+  btn.disabled = false;
+};
+charger();
+</script>
+</body>
+</html>

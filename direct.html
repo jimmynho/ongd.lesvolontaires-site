@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://eajimmy-production.up.railway.app; connect-src 'self' https://eajimmy-production.up.railway.app; frame-src https://www.youtube.com https://www.youtube-nocookie.com; base-uri 'self'; form-action 'self'; object-src 'none'">
+<title>En direct et réunions — ONGD Les Volontaires</title>
+<meta name="description" content="Suivez en direct les activités de l'ONGD Les Volontaires et rejoignez nos réunions virtuelles.">
+<meta name="theme-color" content="#10392a">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+</head>
+<body>
+<header data-commun></header>
+<main>
+  <section class="tete-page">
+    <div class="conteneur">
+      <span class="sur-titre">Lives et réunions virtuelles</span>
+      <h1>En direct</h1>
+      <p>Suivez nos activités en direct depuis le terrain et rejoignez nos réunions en ligne, depuis votre téléphone.</p>
+    </div>
+  </section>
+  <section>
+    <div class="conteneur">
+      <h2>Maintenant</h2>
+      <div class="grille-3" id="en-cours"></div>
+      <h2 style="margin-top:44px">À venir</h2>
+      <div class="grille-3" id="a-venir"></div>
+      <div class="carte" style="margin-top:32px">
+        <h3>Comment ça marche ?</h3>
+        <p>Les réunions et certains lives s'ouvrent dans <strong>Jitsi Meet</strong>, gratuit et sans inscription. Sur téléphone, installez l'application « Jitsi Meet » pour une meilleure qualité. Les réunions privées demandent un code d'accès donné par l'ONGD.</p>
+      </div>
+    </div>
+  </section>
+</main>
+<footer data-commun></footer>
+<a class="whatsapp" href="https://wa.me/243850171480" target="_blank" rel="noopener" aria-label="WhatsApp"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2z"/></svg></a>
+
+<script src="commun.js"></script>
+<script>
+const { esc, api, message } = outils;
+const $ = s => document.querySelector(s);
+const quand = d => d ? new Date(d).toLocaleString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : 'Date à confirmer';
+const PLATEFORMES = { jitsi: 'Jitsi Meet', youtube: 'YouTube', lien: 'Lien externe' };
+
+function carte(d) {
+  const enCours = d.statut === 'en_cours';
+  return `<div class="carte direct-carte" data-id="${d.id}">
+    ${enCours && d.youtube ? `<iframe class="lecteur" src="https://www.youtube-nocookie.com/embed/${esc(d.youtube)}?autoplay=0" allowfullscreen title="${esc(d.titre)}"></iframe>` : ''}
+    <div class="etiquettes" style="margin-top:0">
+      ${enCours ? '<span class="badge-direct"><span class="point-rouge"></span>En direct</span>' : ''}
+      <span class="etiquette">${d.type === 'reunion' ? 'Réunion' : 'Live'}</span>
+      <span class="etiquette or">${PLATEFORMES[d.plateforme]}</span>
+      ${d.prive ? '<span class="etiquette rouge">Avec code</span>' : ''}
+    </div>
+    <h3>${esc(d.titre)}</h3>
+    <p class="petit">${enCours ? 'Commencé' : 'Prévu'} : ${esc(quand(d.debut))} · par ${esc(d.auteur)}</p>
+    ${d.description ? `<p>${esc(d.description)}</p>` : ''}
+    ${d.prive ? `<form class="form-code" novalidate><div class="champ"><label>Code d'accès</label><input name="code" required autocomplete="off" data-no-tr></div>
+      <button class="btn btn-vert" style="width:100%">${d.type === 'reunion' ? 'Rejoindre la réunion' : 'Regarder'}</button><div class="alerte" hidden></div></form>`
+      : `<a class="btn ${enCours ? 'btn-don' : 'btn-contour'}" href="${esc(d.url)}" target="_blank" rel="noopener">${d.type === 'reunion' ? 'Rejoindre la réunion' : enCours ? 'Ouvrir le live' : 'Lien du live'}</a>`}
+  </div>`;
+}
+async function charger() {
+  try {
+    const { directs } = await api('/directs');
+    const ec = directs.filter(d => d.statut === 'en_cours'), av = directs.filter(d => d.statut !== 'en_cours');
+    $('#en-cours').innerHTML = ec.map(carte).join('') || '<div class="vide">Rien en direct pour le moment.</div>';
+    $('#a-venir').innerHTML = av.map(carte).join('') || '<div class="vide">Aucune réunion programmée.</div>';
+    document.querySelectorAll('.form-code').forEach(f => f.onsubmit = async e => {
+      e.preventDefault();
+      const id = f.closest('[data-id]').dataset.id, msg = f.querySelector('.alerte');
+      try { const d = await api(`/directs/${id}/rejoindre`, { method: 'POST', body: JSON.stringify({ code: f.code.value }) }); window.open(d.url, '_blank', 'noopener'); msg.hidden = true; }
+      catch (err) { message(msg, err.message, 'erreur'); }
+    });
+  } catch (e) { $('#en-cours').innerHTML = `<div class="vide">${esc(e.message)}</div>`; }
+}
+charger();
+setInterval(() => { if (!document.querySelector('.form-code input:focus') && !document.querySelector('iframe')) charger(); }, 60000);
+</script>
+</body>
+</html>

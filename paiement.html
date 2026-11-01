@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://eajimmy-production.up.railway.app; connect-src 'self' https://eajimmy-production.up.railway.app; frame-src https://www.youtube.com https://www.youtube-nocookie.com; base-uri 'self'; form-action 'self'; object-src 'none'">
+<title>Suivi du paiement — ONGD Les Volontaires</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#10392a">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+</head>
+<body>
+<header data-commun></header>
+<main>
+  <section>
+    <div class="conteneur etroit">
+      <span class="sur-titre">Suivi du paiement</span>
+      <div class="carte" id="resultat"><p>Vérification en cours…</p></div>
+    </div>
+  </section>
+</main>
+<footer data-commun></footer>
+<script src="commun.js"></script>
+<script>
+const { esc, api, montant, ecrire } = outils;
+const $ = s => document.querySelector(s);
+const ref = new URLSearchParams(location.search).get('ref');
+const OK = { INS: 'confirme', CMD: 'payee', PUB: 'payee' };
+let essais = 0;
+
+async function verifier() {
+  if (!ref) { $('#resultat').innerHTML = '<p>Aucune référence.</p>'; return; }
+  try {
+    const d = await api('/paiements/' + encodeURIComponent(ref));
+    const paye = d.statut === OK[d.type] || ['livree', 'active'].includes(d.statut);
+    let corps = `<p>Référence : <strong data-no-tr>${esc(d.reference)}</strong> · ${montant(d.montant, d.devise)}</p>`;
+    if (d.type === 'INS') {
+      corps = `<h2>${esc(d.programme.titre)}</h2>` + corps;
+      if (paye) { corps += `<div class="alerte ok">Paiement reçu, inscription confirmée !</div><p>Votre code :</p><span class="code-grand" data-no-tr>${esc(d.code)}</span>
+        <p><a class="btn btn-vert" href="formations.html?code=${esc(d.code)}#acces">${d.programme.type === 'formation' ? 'Commencer la formation' : 'Voir ma réservation'}</a></p>`;
+        ecrire('ongd_dernier_code', d.code); }
+    }
+    if (d.type === 'CMD') {
+      corps = '<h2>Votre commande</h2>' + corps + `<ul>${d.articles.map(a => `<li>${a.qte} × ${esc(a.nom)}</li>`).join('')}</ul><p class="petit">${esc(d.livraison)}</p>`;
+      if (paye) corps += `<div class="alerte ok">${d.statut === 'livree' ? 'Commande livrée. Merci !' : 'Paiement reçu ! L\'ONGD prépare votre commande et vous contacte.'}</div>`;
+    }
+    if (d.type === 'PUB') {
+      corps = `<h2>Annonce « ${esc(d.titre)} »</h2>` + corps;
+      if (d.statut === 'active') corps += `<div class="alerte ok">Votre annonce est en ligne${d.fin ? ' jusqu\'au ' + new Date(d.fin).toLocaleDateString('fr-FR') : ''}.</div>`;
+      else if (paye) corps += '<div class="alerte ok">Paiement reçu ! L\'ONGD vérifie votre annonce avant de la mettre en ligne.</div>';
+      else if (d.statut === 'refusee') corps += '<div class="alerte erreur">Annonce refusée. L\'ONGD vous contacte pour le remboursement.</div>';
+    }
+    if (!paye) {
+      if (['echoue', 'annule', 'annulee'].includes(d.statut)) corps += '<div class="alerte erreur">Le paiement n\'a pas abouti ou a été annulé.</div>';
+      else if (d.statut === 'declare') corps += '<div class="alerte info">Paiement déclaré : l\'ONGD vérifie la réception de l\'argent.</div>';
+      else if (d.type !== 'PUB' || d.statut === 'en_attente') {
+        corps += '<div class="alerte info">Paiement en cours de confirmation…</div>';
+        if (++essais < 8) setTimeout(verifier, 5000);
+      }
+    }
+    $('#resultat').innerHTML = corps;
+  } catch (e) { $('#resultat').innerHTML = `<div class="alerte erreur">${esc(e.message)}</div>`; }
+}
+verifier();
+</script>
+</body>
+</html>

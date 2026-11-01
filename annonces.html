@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://eajimmy-production.up.railway.app; connect-src 'self' https://eajimmy-production.up.railway.app; frame-src https://www.youtube.com https://www.youtube-nocookie.com; base-uri 'self'; form-action 'self'; object-src 'none'">
+<title>Publier une annonce — ONGD Les Volontaires</title>
+<meta name="description" content="Faites connaître votre entreprise ou votre événement sur le site de l'ONGD Les Volontaires, tout en soutenant nos actions.">
+<meta name="theme-color" content="#10392a">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+</head>
+<body>
+<header data-commun></header>
+<main>
+  <section class="tete-page">
+    <div class="conteneur">
+      <span class="sur-titre">Annonces payantes</span>
+      <h1>Faites-vous connaître</h1>
+      <p>Votre annonce s'affiche sur les pages du site, et l'argent soutient les actions de l'ONGD.</p>
+    </div>
+  </section>
+  <section>
+    <div class="conteneur etroit">
+      <div class="carte">
+        <form id="form-pub" novalidate>
+          <input name="site_web" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
+          <label>Durée de diffusion</label>
+          <div class="forfaits" id="forfaits"></div>
+          <div class="deux">
+            <div class="champ"><label>Annonceur (entreprise, association…)</label><input name="annonceur" required maxlength="120"></div>
+            <div class="champ"><label>Téléphone ou e-mail</label><input name="contact" required placeholder="+243…"></div>
+          </div>
+          <div class="champ"><label>Titre de l'annonce (80 caractères)</label><input name="titre" required maxlength="80"></div>
+          <div class="champ"><label>Texte court <span class="facultatif">(300 caractères)</span></label><textarea name="texte" maxlength="300" style="min-height:80px"></textarea></div>
+          <div class="champ"><label>Lien <span class="facultatif">(site, page Facebook, WhatsApp…)</span></label><input name="lien" type="url" placeholder="https://"></div>
+          <div class="champ"><label>Image <span class="facultatif">(facultatif)</span></label><input name="image" type="file" accept="image/*"></div>
+          <label>Aperçu</label>
+          <div id="apercu" style="margin-bottom:14px"></div>
+          <div class="champ"><label>Payer en</label><select name="devise"><option value="USD">Dollars</option><option value="CDF">Francs congolais</option></select></div>
+          <p class="petit">L'ONGD vérifie chaque annonce avant de la diffuser. La diffusion commence le jour de la validation. Si une annonce est refusée, l'ONGD vous contacte pour le remboursement.</p>
+          <button class="btn btn-don" style="width:100%">Continuer vers le paiement</button>
+          <div class="alerte" hidden></div>
+        </form>
+        <div id="suite"></div>
+      </div>
+    </div>
+  </section>
+</main>
+<footer data-commun></footer>
+<a class="whatsapp" href="https://wa.me/243850171480" target="_blank" rel="noopener" aria-label="WhatsApp"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2z"/></svg></a>
+
+<script src="commun.js"></script>
+<script>
+const { esc, api, montant, message, reduire } = outils;
+const $ = s => document.querySelector(s);
+const f = $('#form-pub');
+let forfaits = [], jours = null, image = null;
+
+api('/annonces/forfaits').then(d => {
+  forfaits = d.forfaits; jours = forfaits[0]?.jours;
+  dessinerForfaits();
+}).catch(e => message(f.querySelector('.alerte'), e.message, 'erreur'));
+function dessinerForfaits() {
+  $('#forfaits').innerHTML = forfaits.map(x => `<button type="button" class="forfait${x.jours === jours ? ' actif' : ''}" data-j="${x.jours}">
+    <span>${x.jours} jours</span><strong>${x.prix_usd} $</strong><span class="petit">${montant(x.prix_cdf, 'CDF')}</span></button>`).join('');
+}
+$('#forfaits').onclick = e => { const b = e.target.closest('[data-j]'); if (b) { jours = +b.dataset.j; dessinerForfaits(); } };
+function apercu() {
+  $('#apercu').innerHTML = `<div class="annonce">${image ? `<img src="${image}" alt="">` : ''}<span><small>Annonce · ${esc(f.annonceur.value || 'Votre nom')}</small>
+    <strong>${esc(f.titre.value || 'Titre de votre annonce')}</strong>${f.texte.value ? `<em>${esc(f.texte.value)}</em>` : ''}</span></div>`;
+}
+['annonceur', 'titre', 'texte'].forEach(n => f[n].oninput = apercu);
+f.image.onchange = async () => { image = f.image.files[0] ? await reduire(f.image.files[0]).catch(() => null) : null; apercu(); };
+apercu();
+
+f.onsubmit = async e => {
+  e.preventDefault();
+  const msg = f.querySelector('.alerte'), btn = f.querySelector('button[type=submit],button:not([type])'); msg.hidden = true; btn.disabled = true;
+  try {
+    const d = await api('/annonces', { method: 'POST', body: JSON.stringify({ jours, annonceur: f.annonceur.value, contact: f.contact.value, titre: f.titre.value,
+      texte: f.texte.value, lien: f.lien.value, image, devise: f.devise.value, site_web: f.site_web.value }) });
+    f.hidden = true; commun.paiement($('#suite'), d);
+  } catch (err) { message(msg, err.message, 'erreur'); }
+  btn.disabled = false;
+};
+</script>
+</body>
+</html>
