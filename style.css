@@ -184,7 +184,7 @@ input:focus, select:focus, textarea:focus { outline: 3px solid rgba(229,154,47,.
 [hidden] { display: none !important; }
 
 /* =================== Ajouts : nouvelles fonctions =================== */
-@media (min-width: 900px) and (max-width: 1179px) { .menu { display: none; } .burger { display: block !important; } .tiroir.ouvert { display: block !important; } }
+@media (min-width: 900px) and (max-width: 1359px) { .menu { display: none; } .burger { display: block !important; } .tiroir.ouvert { display: block !important; } }
 .menu a[aria-current="page"] { background: var(--vert-pale); color: var(--vert-fonce); }
 .langue { width: auto; min-height: 38px; padding: 4px 8px; border-radius: 99px; font-size: .88rem; font-weight: 700; background: var(--papier); margin-left: auto; max-width: 118px; }
 .entete .conteneur { gap: 8px; }
@@ -262,4 +262,5 @@ input:focus, select:focus, textarea:focus { outline: 3px solid rgba(229,154,47,.
 .forfait strong { display: block; font: 600 1.3rem var(--titre); }
 .brouillon { background: #fdf1de; border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; }
 .menu a, .marque span, .menu .btn { white-space: nowrap; }
-@media (min-width: 1180px) { .menu { gap: 0; } .menu a { padding: 8px 7px; font-size: .92rem; } .menu .btn { padding: 0 14px; } }
+@media (min-width: 1360px) { .menu { gap: 0; } .menu a { padding: 8px 7px; font-size: .92rem; } .menu .btn { padding: 0 14px; } }
+@media (min-width: 1360px) { .entete .conteneur { max-width: 1320px; } }

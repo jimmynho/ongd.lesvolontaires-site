@@ -9,8 +9,8 @@
 
   /* ---------- En-tête commun (pages qui contiennent <header data-commun>) ---------- */
   const LIENS = [
-    ['./#activites', 'Activités'], ['formations.html', 'Formations'], ['boutique.html', 'Boutique'],
-    ['dialogue.html', 'Dialogue'], ['direct.html', 'En direct'], ['./#partenariat', 'Partenariat'], ['./#contact', 'Contact'],
+    ['./#activites', 'Activités'], ['formations.html', 'Formations'], ['fichiers.html', 'Documents'], ['boutique.html', 'Boutique'],
+    ['dialogue.html', 'Dialogue'], ['direct.html', 'En direct'], ['membres.html', 'Membres'], ['./#partenariat', 'Partenariat'], ['./#contact', 'Contact'],
   ];
   const hote = $('header[data-commun]');
   if (hote) {
@@ -40,9 +40,9 @@
     pied.className = 'pied';
     pied.innerHTML = `<div class="conteneur"><div class="grille">
       <div><h3>ONGD Les Volontaires</h3><p>${esc(ONGD.slogan)}</p></div>
-      <div><h3>Liens</h3><p><a href="./#don">Faire un don</a><br><a href="formations.html">Formations et événements</a><br><a href="boutique.html">Boutique</a><br><a href="annonces.html">Publier une annonce</a><br><a href="volontaire.html">Espace volontaire</a></p></div>
+      <div><h3>Liens</h3><p><a href="./#don">Faire un don</a><br><a href="formations.html">Formations et événements</a><br><a href="boutique.html">Boutique</a><br><a href="fichiers.html">Documents et vidéos</a><br><a href="membres.html">Devenir membre</a><br><a href="annonces.html">Publier une annonce</a><br><a href="volontaire.html">Espace volontaire</a></p></div>
       <div><h3>Nous trouver</h3><p>${esc(ONGD.siege)}</p><p>WhatsApp : <a href="https://wa.me/${ONGD.whatsapp}">${esc(ONGD.telephoneAffiche)}</a></p></div>
-    </div><div class="bas">© ${new Date().getFullYear()} ONGD Les Volontaires · Site relié à <a href="https://eaji.org">eaji.org</a></div></div>`;
+    </div><div class="bas">© ${new Date().getFullYear()} ONGD Les Volontaires · <a href="https://ongdlesvolontaires.eaji.org">ongdlesvolontaires.eaji.org</a></div></div>`;
   }
 
   /* ---------- Petit message flottant ---------- */

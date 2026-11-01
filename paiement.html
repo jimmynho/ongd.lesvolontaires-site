@@ -29,7 +29,7 @@
 const { esc, api, montant, ecrire } = outils;
 const $ = s => document.querySelector(s);
 const ref = new URLSearchParams(location.search).get('ref');
-const OK = { INS: 'confirme', CMD: 'payee', PUB: 'payee' };
+const OK = { INS: 'confirme', CMD: 'payee', PUB: 'payee', TEL: 'paye', COT: 'paye' };
 let essais = 0;
 
 async function verifier() {
@@ -53,6 +53,17 @@ async function verifier() {
       if (d.statut === 'active') corps += `<div class="alerte ok">Votre annonce est en ligne${d.fin ? ' jusqu\'au ' + new Date(d.fin).toLocaleDateString('fr-FR') : ''}.</div>`;
       else if (paye) corps += '<div class="alerte ok">Paiement reçu ! L\'ONGD vérifie votre annonce avant de la mettre en ligne.</div>';
       else if (d.statut === 'refusee') corps += '<div class="alerte erreur">Annonce refusée. L\'ONGD vous contacte pour le remboursement.</div>';
+    }
+    if (d.type === 'TEL') {
+      corps = `<h2>${esc(d.fichier ? d.fichier.titre : 'Téléchargement')}</h2>` + corps;
+      if (paye && d.jeton) corps += `<div class="alerte ok">Paiement reçu ! Votre fichier est prêt.</div>
+        <p><a class="btn btn-don" href="${ONGD.api}/telecharger/${esc(d.jeton)}">Télécharger le fichier</a></p>
+        <p class="petit">Lien valable jusqu'au ${new Date(d.acces_jusqu).toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' })} · ${d.telechargements_restants} téléchargement(s) restant(s). Gardez cette page.</p>`;
+    }
+    if (d.type === 'COT') {
+      corps = `<h2>Cotisation ${esc(d.categorie_nom)}</h2>` + corps;
+      if (paye) corps += `<div class="alerte ok">Cotisation reçue, merci ${esc(d.membre || '')} ! Votre compte membre est actif${d.expire_le ? ' jusqu\'au ' + new Date(d.expire_le).toLocaleDateString('fr-FR') : ''}.</div>
+        <p><a class="btn btn-vert" href="membres.html">Ouvrir mon espace membre</a></p>`;
     }
     if (!paye) {
       if (['echoue', 'annule', 'annulee'].includes(d.statut)) corps += '<div class="alerte erreur">Le paiement n\'a pas abouti ou a été annulé.</div>';

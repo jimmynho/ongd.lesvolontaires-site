@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://eajimmy-production.up.railway.app; connect-src 'self' https://eajimmy-production.up.railway.app; frame-src https://www.youtube.com https://www.youtube-nocookie.com; base-uri 'self'; form-action 'self'; object-src 'none'">
+<title>Membres d'honneur et VIP — ONGD Les Volontaires</title>
+<meta name="description" content="Devenez membre d'honneur ou VIP de l'ONGD Les Volontaires : participez aux décisions et téléchargez gratuitement nos documents et vidéos.">
+<meta name="theme-color" content="#10392a">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+</head>
+<body>
+<header data-commun></header>
+<main>
+  <section class="tete-page">
+    <div class="conteneur">
+      <span class="sur-titre">Membres</span>
+      <h1>Membres d'honneur et VIP</h1>
+      <p>Soutenez l'ONGD par une cotisation trimestrielle, décidez avec nous des orientations de nos projets et téléchargez gratuitement tous nos fichiers.</p>
+    </div>
+  </section>
+
+  <!-- Visiteur : présentation, inscription, connexion -->
+  <section id="vue-visiteur">
+    <div class="conteneur">
+      <div class="grille-3" id="offres" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))"></div>
+      <div class="apropos" style="margin-top:32px">
+        <div class="carte">
+          <h3>Devenir membre</h3>
+          <form id="form-inscription" novalidate>
+            <input name="site_web" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
+            <div class="champ"><label>Catégorie</label><select name="categorie"><option value="honneur">Membre d'honneur</option><option value="vip">Membre VIP</option></select></div>
+            <div class="deux">
+              <div class="champ"><label>Nom complet</label><input name="nom" required autocomplete="name"></div>
+              <div class="champ"><label>Téléphone</label><input name="telephone" type="tel" required autocomplete="tel" placeholder="+243…"></div>
+              <div class="champ"><label>E-mail <span class="facultatif">(facultatif)</span></label><input name="email" type="email" autocomplete="email"></div>
+              <div class="champ"><label>Organisation <span class="facultatif">(facultatif)</span></label><input name="organisation" autocomplete="organization"></div>
+              <div class="champ"><label>Mot de passe (8 caractères minimum)</label><input name="mdp" type="password" required minlength="8" autocomplete="new-password"></div>
+              <div class="champ"><label>Confirmer le mot de passe</label><input name="mdp2" type="password" required autocomplete="new-password"></div>
+            </div>
+            <div class="champ"><label>Payer en</label><select name="devise"><option value="USD">Dollars</option><option value="CDF">Francs congolais</option></select></div>
+            <p>Première cotisation : <strong id="montant-inscription"></strong> pour 3 mois.</p>
+            <button class="btn btn-don" style="width:100%">Créer mon compte et payer</button>
+            <div class="alerte" hidden></div>
+          </form>
+          <div id="suite-inscription"></div>
+        </div>
+        <div class="carte">
+          <h3>Déjà membre ?</h3>
+          <form id="form-connexion" novalidate>
+            <div class="champ"><label>Téléphone</label><input name="telephone" type="tel" required autocomplete="tel"></div>
+            <div class="champ"><label>Mot de passe</label><input name="mdp" type="password" required autocomplete="current-password"></div>
+            <button class="btn btn-vert" style="width:100%">Se connecter</button>
+            <div class="alerte" hidden></div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Membre connecté -->
+  <section id="vue-membre" hidden>
+    <div class="conteneur">
+      <div class="carte" id="statut-membre"></div>
+      <div class="carte" id="renouveler" style="margin-top:16px">
+        <h3>Renouveler ou changer de catégorie</h3>
+        <p class="petit">La cotisation ajoute 3 mois à partir de la fin de votre période en cours.</p>
+        <form id="form-cotiser" novalidate>
+          <div class="deux">
+            <div class="champ"><label>Catégorie</label><select name="categorie"><option value="honneur">Membre d'honneur</option><option value="vip">Membre VIP</option></select></div>
+            <div class="champ"><label>Payer en</label><select name="devise"><option value="USD">Dollars</option><option value="CDF">Francs congolais</option></select></div>
+          </div>
+          <p>Montant : <strong id="montant-cotiser"></strong> pour 3 mois.</p>
+          <button class="btn btn-don" style="width:100%">Payer ma cotisation</button>
+          <div class="alerte" hidden></div>
+        </form>
+        <div id="suite-cotiser"></div>
+      </div>
+
+      <div id="espace" hidden>
+        <h2 style="margin-top:40px">Décider ensemble</h2>
+        <p class="intro">Votez sur les orientations des projets de l'ONGD et donnez votre avis. Vous pouvez changer votre vote tant que la consultation est ouverte.</p>
+        <div id="consultations" style="margin-top:16px"></div>
+
+        <div class="carte" style="margin-top:20px">
+          <h3>Proposer une orientation</h3>
+          <form id="form-proposition" novalidate>
+            <div class="champ"><label>Titre</label><input name="titre" maxlength="150" required></div>
+            <div class="champ"><label>Votre proposition</label><textarea name="texte" maxlength="4000" required></textarea></div>
+            <button class="btn btn-vert" style="width:100%">Envoyer à l'ONGD</button>
+            <div class="alerte" hidden></div>
+          </form>
+          <div id="mes-propositions"></div>
+        </div>
+
+        <div class="carte" style="margin-top:20px">
+          <h3>Nos fichiers, gratuits pour vous</h3>
+          <p>Documents, photos et vidéos : téléchargez-les sans payer.</p>
+          <a class="btn btn-vert" href="fichiers.html">Ouvrir les documents et vidéos</a>
+        </div>
+      </div>
+
+      <div class="carte" style="margin-top:20px">
+        <h3>Mes cotisations</h3>
+        <div id="cotisations"></div>
+      </div>
+      <div class="carte" style="margin-top:20px">
+        <h3>Sécurité du compte</h3>
+        <form id="form-mdp" novalidate>
+          <div class="deux">
+            <div class="champ"><label>Mot de passe actuel</label><input name="ancien" type="password" autocomplete="current-password" required></div>
+            <div class="champ"><label>Nouveau mot de passe</label><input name="nouveau" type="password" autocomplete="new-password" minlength="8" required></div>
+          </div>
+          <button class="btn btn-contour" style="width:100%">Changer le mot de passe</button>
+          <div class="alerte" hidden></div>
+        </form>
+        <button class="btn btn-contour btn-petit" id="btn-sortir" style="margin-top:14px">Se déconnecter</button>
+      </div>
+    </div>
+  </section>
+</main>
+<footer data-commun></footer>
+<a class="whatsapp" href="https://wa.me/243850171480" target="_blank" rel="noopener" aria-label="WhatsApp"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2z"/></svg></a>
+
+<script src="commun.js"></script>
+<script>
+const { esc, api, montant, message, lire, ecrire } = outils;
+const $ = s => document.querySelector(s);
+let token = lire('ongd_membre_token'), offre = null, moi = null;
+const AVANTAGES = {
+  honneur: ['Téléchargement gratuit de tous nos documents, photos et vidéos', 'Vote sur les orientations des projets', 'Avis et propositions dans l\'espace membres', 'Votre soutien régulier à nos actions'],
+  vip: ['Tous les avantages des membres d\'honneur', 'Consultations réservées aux membres VIP', 'Un poids particulier dans les grandes orientations', 'Reconnaissance comme partenaire privilégié de l\'ONGD'],
+};
+const quand = d => new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+const STATUTS = { paye: 'Payée', declare: 'Déclarée — en vérification', en_attente: 'En attente de paiement', annule: 'Annulée', echoue: 'Échouée' };
+
+function prix(cat, devise) { const o = offre?.categories[cat]; return o ? (devise === 'USD' ? o.prix_usd + ' $' : montant(o.prix_cdf, 'CDF')) : ''; }
+async function chargerOffre() {
+  offre = await api('/membres/offre');
+  $('#offres').innerHTML = ['honneur', 'vip'].map(c => `<div class="carte domaine"${c === 'vip' ? ' style="border-top-color:var(--vert)"' : ''}>
+    <span class="etiquette ${c === 'vip' ? '' : 'or'}">${c === 'vip' ? 'VIP' : 'Honneur'}</span>
+    <h3 style="margin-top:10px">${esc(offre.categories[c].nom)}</h3>
+    <div class="prix">${offre.categories[c].prix_usd} $ <span class="petit">par trimestre · ${montant(offre.categories[c].prix_cdf, 'CDF')}</span></div>
+    <ul>${AVANTAGES[c].map(a => `<li>${esc(a)}</li>`).join('')}</ul>
+    <p class="petit">Contribution renouvelable tous les 3 mois.</p></div>`).join('');
+  majMontants();
+}
+function majMontants() {
+  const fi = $('#form-inscription'), fc = $('#form-cotiser');
+  $('#montant-inscription').textContent = prix(fi.categorie.value, fi.devise.value);
+  $('#montant-cotiser').textContent = prix(fc.categorie.value, fc.devise.value);
+}
+['#form-inscription', '#form-cotiser'].forEach(s => { $(s).categorie.onchange = majMontants; $(s).devise.onchange = majMontants; });
+
+async function ouvrir() {
+  if (!token) return montrer(false);
+  try { moi = await api('/membres/moi', {}, token); }
+  catch (e) { if (e.status === 401 || e.status === 403) { token = null; ecrire('ongd_membre_token', null); if (e.status === 403) commun.toast(e.message); } return montrer(false); }
+  montrer(true);
+  const jours = moi.expire_le ? Math.ceil((new Date(moi.expire_le) - Date.now()) / 86400000) : 0;
+  $('#statut-membre').innerHTML = `<span class="etiquette ${moi.categorie === 'vip' ? '' : 'or'}">${esc(moi.categorie_nom)}</span>
+    <h2 style="margin-top:10px">Bonjour ${esc(moi.nom)}</h2>
+    ${moi.actif ? `<div class="alerte ok">Cotisation à jour jusqu'au ${quand(moi.expire_le)} (${jours} jour(s)).</div>${jours <= 14 ? '<div class="alerte info">Votre période se termine bientôt : pensez à renouveler.</div>' : ''}`
+      : moi.statut === 'en_attente' ? '<div class="alerte info">Votre compte sera activé dès que votre première cotisation sera confirmée.</div>'
+      : `<div class="alerte erreur">Votre cotisation a expiré le ${quand(moi.expire_le)}. Renouvelez-la pour retrouver l'espace membres.</div>`}`;
+  $('#form-cotiser').categorie.value = moi.categorie; majMontants();
+  $('#cotisations').innerHTML = moi.cotisations.map(c => `<div class="ligne-item">
+    <span class="statut ${c.statut}">${STATUTS[c.statut] || c.statut}</span> <strong>${montant(c.montant, c.devise)}</strong>
+    <span class="petit">· ${c.categorie === 'vip' ? 'VIP' : 'Honneur'} · ${quand(c.cree_le)}${c.periode_fin ? ' · jusqu\'au ' + quand(c.periode_fin) : ''}</span>
+    ${['en_attente', 'declare'].includes(c.statut) ? ` · <a href="paiement.html?ref=${esc(c.reference)}">suivre</a>` : ''}</div>`).join('') || '<p class="petit">Aucune cotisation.</p>';
+  $('#espace').hidden = !moi.actif;
+  if (moi.actif) chargerConsultations();
+}
+function montrer(connecte) { $('#vue-visiteur').hidden = connecte; $('#vue-membre').hidden = !connecte; }
+
+async function chargerConsultations() {
+  try {
+    const d = await api('/membres/consultations', {}, token);
+    $('#consultations').innerHTML = d.consultations.map(c => {
+      const total = Object.values(c.resultats).reduce((s, v) => s + v.total, 0);
+      const ouverte = c.statut === 'ouverte';
+      return `<div class="carte" data-c="${c.id}" style="margin-bottom:14px">
+        <div class="etiquettes" style="margin-top:0"><span class="statut ${ouverte ? '' : 'annule'}">${ouverte ? 'Ouverte' : 'Close'}</span>
+          ${c.public === 'vip' ? '<span class="etiquette">Réservée aux VIP</span>' : ''}${c.propose_par ? `<span class="etiquette or">Proposée par ${esc(c.propose_par)}</span>` : ''}</div>
+        <h3>${esc(c.titre)}</h3>
+        ${c.texte ? `<p class="texte-long">${esc(c.texte)}</p>` : ''}
+        ${c.date_limite ? `<p class="petit">Vote jusqu'au ${new Date(c.date_limite).toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' })}</p>` : ''}
+        ${c.options.map(o => { const n = c.resultats[o]?.total || 0, pct = total ? Math.round(n / total * 100) : 0;
+          return `<div style="margin:8px 0">
+            <div style="display:flex;justify-content:space-between;gap:8px"><label class="case" style="margin:0"><input type="radio" name="vote-${c.id}" value="${esc(o)}" ${c.mon_vote === o ? 'checked' : ''} ${ouverte ? '' : 'disabled'}> ${esc(o)}</label>
+              <span class="petit">${n} vote(s) · ${pct} %</span></div>
+            <div class="progression" style="margin:4px 0 0"><span style="width:${pct}%"></span></div></div>`; }).join('')}
+        <p class="petit">${total} vote(s)${c.mon_vote ? ' · votre vote : <strong>' + esc(c.mon_vote) + '</strong>' : ''}</p>
+        ${ouverte ? `<button class="btn btn-vert btn-petit" data-voter>Voter</button>` : ''}
+        <details style="margin-top:12px"><summary>${c.avis.length} avis</summary>
+          ${c.avis.map(a => `<div class="message-fil"><div class="auteur">${esc(a.nom)} <span class="etiquette">${a.categorie === 'vip' ? 'VIP' : 'Honneur'}</span></div><p class="texte-long" style="margin:4px 0 0">${esc(a.texte)}</p></div>`).join('')}
+          ${ouverte ? `<form class="form-avis" style="display:flex;gap:6px;margin-top:8px" novalidate><input name="texte" placeholder="Votre avis…" maxlength="2000"><button class="btn btn-contour btn-petit">Envoyer</button></form>` : ''}
+        </details>
+      </div>`;
+    }).join('') || '<div class="vide">Aucune consultation pour le moment.</div>';
+    $('#mes-propositions').innerHTML = d.mes_propositions.length ? '<h4 style="margin-top:16px">Mes propositions</h4>' + d.mes_propositions.map(p =>
+      `<div class="petit">• ${esc(p.titre)} — ${p.statut === 'proposee' ? 'en attente de l\'ONGD' : p.statut === 'refusee' ? 'non retenue' : 'soumise au vote'}</div>`).join('') : '';
+    document.querySelectorAll('.form-avis').forEach(f => f.onsubmit = async e => {
+      e.preventDefault();
+      try { await api(`/membres/consultations/${f.closest('[data-c]').dataset.c}/avis`, { method: 'POST', body: JSON.stringify({ texte: f.texte.value }) }, token); chargerConsultations(); }
+      catch (err) { commun.toast(err.message); }
+    });
+  } catch (e) { $('#consultations').innerHTML = `<div class="alerte erreur">${esc(e.message)}</div>`; }
+}
+$('#consultations').onclick = async e => {
+  const b = e.target.closest('[data-voter]'); if (!b) return;
+  const carte = b.closest('[data-c]'), choix = carte.querySelector('input[type=radio]:checked');
+  if (!choix) return commun.toast('Choisissez une réponse.');
+  try { const d = await api(`/membres/consultations/${carte.dataset.c}/vote`, { method: 'POST', body: JSON.stringify({ choix: choix.value }) }, token); commun.toast(d.message); chargerConsultations(); }
+  catch (err) { commun.toast(err.message); }
+};
+
+$('#form-inscription').onsubmit = async e => {
+  e.preventDefault();
+  const f = e.target, msg = f.querySelector('.alerte'), btn = f.querySelector('button'); msg.hidden = true;
+  if (f.mdp.value !== f.mdp2.value) return message(msg, 'Les deux mots de passe ne sont pas identiques.', 'erreur');
+  btn.disabled = true;
+  try {
+    const d = await api('/membres/inscription', { method: 'POST', body: JSON.stringify({ categorie: f.categorie.value, nom: f.nom.value, telephone: f.telephone.value,
+      email: f.email.value, organisation: f.organisation.value, mot_de_passe: f.mdp.value, devise: f.devise.value, site_web: f.site_web.value }) });
+    token = d.token; ecrire('ongd_membre_token', token);
+    f.hidden = true; commun.paiement($('#suite-inscription'), d);
+  } catch (err) { message(msg, err.message, 'erreur'); }
+  btn.disabled = false;
+};
+$('#form-connexion').onsubmit = async e => {
+  e.preventDefault();
+  const f = e.target, msg = f.querySelector('.alerte'), btn = f.querySelector('button'); msg.hidden = true; btn.disabled = true;
+  try { const d = await api('/membres/connexion', { method: 'POST', body: JSON.stringify({ telephone: f.telephone.value, mot_de_passe: f.mdp.value }) });
+    token = d.token; ecrire('ongd_membre_token', token); f.reset(); ouvrir(); }
+  catch (err) { message(msg, err.message, 'erreur'); }
+  btn.disabled = false;
+};
+$('#form-cotiser').onsubmit = async e => {
+  e.preventDefault();
+  const f = e.target, msg = f.querySelector('.alerte'), btn = f.querySelector('button'); msg.hidden = true; btn.disabled = true;
+  try { const d = await api('/membres/cotiser', { method: 'POST', body: JSON.stringify({ categorie: f.categorie.value, devise: f.devise.value }) }, token);
+    f.hidden = true; commun.paiement($('#suite-cotiser'), d); }
+  catch (err) { message(msg, err.message, 'erreur'); }
+  btn.disabled = false;
+};
+$('#form-proposition').onsubmit = async e => {
+  e.preventDefault();
+  const f = e.target, msg = f.querySelector('.alerte'), btn = f.querySelector('button'); msg.hidden = true; btn.disabled = true;
+  try { const d = await api('/membres/propositions', { method: 'POST', body: JSON.stringify({ titre: f.titre.value, texte: f.texte.value }) }, token);
+    message(msg, d.message, 'ok'); f.reset(); chargerConsultations(); }
+  catch (err) { message(msg, err.message, 'erreur'); }
+  btn.disabled = false;
+};
+$('#form-mdp').onsubmit = async e => {
+  e.preventDefault();
+  const f = e.target, msg = f.querySelector('.alerte'), btn = f.querySelector('button'); msg.hidden = true; btn.disabled = true;
+  try { const d = await api('/membres/mot-de-passe', { method: 'POST', body: JSON.stringify({ ancien: f.ancien.value, nouveau: f.nouveau.value }) }, token); message(msg, d.message, 'ok'); f.reset(); }
+  catch (err) { message(msg, err.message, 'erreur'); }
+  btn.disabled = false;
+};
+$('#btn-sortir').onclick = async () => { try { await api('/membres/deconnexion', { method: 'POST' }, token); } catch {} token = null; ecrire('ongd_membre_token', null); montrer(false); };
+
+chargerOffre().catch(e => $('#offres').innerHTML = `<div class="vide">${esc(e.message)}</div>`);
+ouvrir();
+</script>
+</body>
+</html>

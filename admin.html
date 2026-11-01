@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://eajimmy-production.up.railway.app; connect-src 'self' https://eajimmy-production.up.railway.app; frame-src 'none'; base-uri 'self'; form-action 'self'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://eajimmy-production.up.railway.app; connect-src 'self' https://eajimmy-production.up.railway.app https://*.backblazeb2.com; frame-src 'none'; base-uri 'self'; form-action 'self'; object-src 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Administration — ONGD Les Volontaires</title>
 <meta name="robots" content="noindex, nofollow">
@@ -50,6 +50,8 @@
       <button data-o="dialogue">Dialogue</button>
       <button data-o="direct">Direct</button>
       <button data-o="reglages">Réglages</button>
+      <button data-o="fichiers">Fichiers <span class="pastille" id="p-achats" hidden></span></button>
+      <button data-o="membres">Membres <span class="pastille" id="p-membres" hidden></span></button>
       <button data-o="securite">Sécurité</button>
     </div>
     <div id="alerte-generale" class="alerte" hidden></div>
@@ -180,6 +182,12 @@
       <p id="etat-services" class="petit"></p>
       <form id="form-reglages" novalidate>
         <div class="champ"><label>Taux du jour : 1 $ = … FC</label><input name="taux_cdf" type="number" min="100" step="1"></div>
+        <div class="deux">
+          <div class="champ"><label>Prix d'un document / photo ($)</label><input name="prix_document_usd" type="number" min="0" step="1"></div>
+          <div class="champ"><label>Prix d'une vidéo ($)</label><input name="prix_video_usd" type="number" min="0" step="1"></div>
+          <div class="champ"><label>Cotisation membre d'honneur ($ / trimestre)</label><input name="cotisation_honneur_usd" type="number" min="0" step="1"></div>
+          <div class="champ"><label>Cotisation membre VIP ($ / trimestre)</label><input name="cotisation_vip_usd" type="number" min="0" step="1"></div>
+        </div>
         <label>Forfaits des annonces (jours / prix en $)</label>
         <div id="forfaits-admin"></div>
         <div class="champ"><label>Informations pour l'assistant IA <span class="facultatif">(horaires, projets en cours, réponses aux questions fréquentes…)</span></label><textarea name="infos_ia" rows="7"></textarea></div>
@@ -188,6 +196,49 @@
         <button class="btn btn-vert" style="width:100%">Enregistrer les réglages</button>
         <div class="alerte" hidden></div>
       </form>
+    </section>
+
+    <!-- Fichiers payants -->
+    <section class="boite" data-panneau="fichiers" hidden style="padding:22px">
+      <div id="etat-stockage"></div>
+      <form id="form-fichier" class="carte" novalidate style="margin-bottom:16px">
+        <h3>Publier un fichier</h3>
+        <div class="champ"><label>Fichier (PDF, PowerPoint, Word, photo, vidéo… 2 Go maximum)</label><input name="fichier" type="file"></div>
+        <div class="champ"><label>Titre</label><input name="titre" maxlength="150" required></div>
+        <div class="champ"><label>Description <span class="facultatif">(facultatif)</span></label><textarea name="description" style="min-height:70px"></textarea></div>
+        <div class="champ"><label>Prix du téléchargement en $</label><input name="prix_usd" type="number" min="0" step="1"><p class="petit" id="prix-defaut-info"></p></div>
+        <div class="progression" id="barre-envoi" hidden style="height:auto;padding:0;position:relative"><span style="height:14px;width:0"></span><em class="petit" style="position:absolute;right:8px;top:-2px;font-style:normal"></em></div>
+        <button class="btn btn-vert" style="width:100%">Envoyer et publier</button>
+        <div class="alerte" hidden></div>
+      </form>
+      <div id="liste-fichiers"></div>
+      <h3 style="margin-top:24px">Ventes</h3>
+      <div id="liste-achats"></div>
+    </section>
+
+    <!-- Membres -->
+    <section class="boite" data-panneau="membres" hidden style="padding:22px">
+      <div class="bascule" id="filtre-membres"><button data-v="membres" class="actif">Membres</button><button data-v="consultations">Consultations</button></div>
+      <div id="vue-liste-membres">
+        <div class="totaux" id="totaux-membres"></div>
+        <button class="btn btn-contour btn-petit" id="btn-csv-cotisations">Télécharger les cotisations (CSV)</button>
+        <div id="liste-membres" style="margin-top:10px"></div>
+      </div>
+      <div id="vue-consultations" hidden>
+        <form id="form-consultation" class="carte" novalidate style="margin-bottom:16px">
+          <h3>Nouvelle consultation</h3>
+          <div class="champ"><label>Question / orientation à décider</label><input name="titre" maxlength="150" required></div>
+          <div class="champ"><label>Explications</label><textarea name="texte"></textarea></div>
+          <div class="champ"><label>Réponses possibles <span class="facultatif">(une par ligne ; vide = Pour / Contre / Abstention)</span></label><textarea name="options" style="min-height:70px"></textarea></div>
+          <div class="deux">
+            <div class="champ"><label>Qui vote ?</label><select name="public"><option value="tous">Tous les membres (honneur et VIP)</option><option value="vip">Membres VIP seulement</option></select></div>
+            <div class="champ"><label>Date limite <span class="facultatif">(facultatif)</span></label><input name="date_limite" type="datetime-local"></div>
+          </div>
+          <button class="btn btn-vert" style="width:100%">Ouvrir la consultation</button>
+          <div class="alerte" hidden></div>
+        </form>
+        <div id="liste-consultations"></div>
+      </div>
     </section>
 
     <!-- Sécurité -->
@@ -214,7 +265,7 @@ let token = lireS('ongd_admin_token');
 const A = (chemin, opts) => api(chemin, opts, token);
 const STATUTS = { en_attente: 'En attente', publie: 'Publiée', refuse: 'Refusée', actif: 'Actif', suspendu: 'Suspendu',
   paye: 'Reçu', declare: 'Déclaré — à vérifier', annule: 'Annulé', echoue: 'Échoué', confirme: 'Confirmé', payee: 'Payée', livree: 'Livrée',
-  annulee: 'Annulée', active: 'En ligne', refusee: 'Refusée', brouillon: 'Brouillon', prevu: 'Prévu', en_cours: 'En direct', termine: 'Terminé', masque: 'Masqué', visible: 'Visible' };
+  annulee: 'Annulée', active: 'En ligne', refusee: 'Refusée', brouillon: 'Brouillon', prevu: 'Prévu', en_cours: 'En direct', termine: 'Terminé', masque: 'Masqué', visible: 'Visible', ouverte: 'Ouverte', close: 'Close', proposee: 'Proposée' };
 const badge = s => `<span class="statut ${s}">${STATUTS[s] || s}</span>`;
 const heure = iso => new Date(iso).toLocaleString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
@@ -251,12 +302,12 @@ $('#onglets').onclick = e => {
   charger();
 };
 function charger() { resume(); ({ activites: chargerAct, volontaires: chargerVol, dons: chargerDons, messages: chargerMsg, formations: chargerProg, boutique: chargerBoutique,
-  annonces: chargerAnnonces, dialogue: chargerSujets, direct: chargerDirects, reglages: chargerReglages, securite: chargerSecurite }[onglet] || (() => {}))(); }
+  annonces: chargerAnnonces, dialogue: chargerSujets, direct: chargerDirects, reglages: chargerReglages, securite: chargerSecurite, fichiers: chargerFichiers, membres: chargerMembres }[onglet] || (() => {}))(); }
 
 async function resume() {
   try {
     const d = await A('/admin/resume');
-    for (const k of ['activites', 'volontaires', 'dons', 'messages', 'inscriptions', 'commandes', 'annonces']) { const p = $('#p-' + k); p.textContent = d.en_attente[k]; p.hidden = !d.en_attente[k]; }
+    for (const k of ['activites', 'volontaires', 'dons', 'messages', 'inscriptions', 'commandes', 'annonces', 'achats', 'membres']) { const p = $('#p-' + k); p.textContent = d.en_attente[k]; p.hidden = !d.en_attente[k]; }
     $('#totaux').innerHTML = (d.dons_recus.length ? d.dons_recus : [{ devise: 'USD', total: 0, nombre: 0 }])
       .map(t => `<div><strong>${montant(t.total, t.devise)}</strong><span class="petit">${t.nombre} don(s) reçu(s)</span></div>`).join('');
     $('#etat-paiement').textContent = d.paiement_en_ligne ? 'Paiement en ligne CinetPay : actif.' : 'Paiement en ligne non configuré : les donateurs voient les comptes Mobile Money de config.js.';
@@ -675,7 +726,7 @@ async function chargerReglages() {
     const { reglages: r, ia, paiement_en_ligne } = await A('/admin/reglages');
     $('#etat-services').innerHTML = `Assistant IA : <strong>${ia ? 'actif' : 'inactif (ajoutez ANTHROPIC_API_KEY dans Railway)'}</strong> · Paiement en ligne CinetPay : <strong>${paiement_en_ligne ? 'actif' : 'inactif'}</strong>`;
     const f = $('#form-reglages');
-    f.taux_cdf.value = r.taux_cdf; f.infos_ia.value = r.infos_ia || ''; f.reponses_auto.checked = !!r.reponses_auto; f.mots_interdits.value = (r.mots_interdits || []).join(', ');
+    f.taux_cdf.value = r.taux_cdf; for (const k of ['prix_document_usd', 'prix_video_usd', 'cotisation_honneur_usd', 'cotisation_vip_usd']) f[k].value = r[k]; f.infos_ia.value = r.infos_ia || ''; f.reponses_auto.checked = !!r.reponses_auto; f.mots_interdits.value = (r.mots_interdits || []).join(', ');
     const fo = [...r.forfaits_annonces]; while (fo.length < 3) fo.push({ jours: '', prix_usd: '' });
     $('#forfaits-admin').innerHTML = fo.map(x => `<div class="deux" data-forfait><div class="champ"><input type="number" min="1" data-j value="${x.jours}" placeholder="jours"></div>
       <div class="champ"><input type="number" min="1" data-p value="${x.prix_usd}" placeholder="prix en $"></div></div>`).join('');
@@ -685,7 +736,8 @@ $('#form-reglages').onsubmit = async e => {
   e.preventDefault();
   const f = e.target, msg = f.querySelector('.alerte');
   try {
-    const d = await A('/admin/reglages', { method: 'PATCH', body: JSON.stringify({ taux_cdf: f.taux_cdf.value, infos_ia: f.infos_ia.value, reponses_auto: f.reponses_auto.checked,
+    const d = await A('/admin/reglages', { method: 'PATCH', body: JSON.stringify({ taux_cdf: f.taux_cdf.value, prix_document_usd: f.prix_document_usd.value, prix_video_usd: f.prix_video_usd.value,
+      cotisation_honneur_usd: f.cotisation_honneur_usd.value, cotisation_vip_usd: f.cotisation_vip_usd.value, infos_ia: f.infos_ia.value, reponses_auto: f.reponses_auto.checked,
       mots_interdits: f.mots_interdits.value,
       forfaits_annonces: [...document.querySelectorAll('[data-forfait]')].map(x => ({ jours: x.querySelector('[data-j]').value, prix_usd: x.querySelector('[data-p]').value })).filter(x => x.jours && x.prix_usd) }) });
     message(msg, d.message, 'ok');
@@ -736,6 +788,153 @@ $('#btn-tout-deco').onclick = async () => {
   if (!confirm('Déconnecter tous les autres appareils (administrateur et volontaires) ?')) return;
   try { const d = await A('/admin/securite/deconnecter-tout', { method: 'POST' }); alert(d.message); chargerSecurite(); } catch (e) { erreur(e); }
 };
+
+/* ================= Fichiers payants ================= */
+let fichiersAdmin = [], prixDefaut = { document: 10, video: 20 };
+const poids = o => o >= 1073741824 ? (o / 1073741824).toFixed(1).replace('.', ',') + ' Go' : o >= 1048576 ? (o / 1048576).toFixed(1).replace('.', ',') + ' Mo' : Math.max(1, Math.round(o / 1024)) + ' Ko';
+const GENRES_F = { document: 'Document', photo: 'Photo', video: 'Vidéo' };
+async function chargerFichiers() {
+  try {
+    const d = await A('/admin/fichiers');
+    fichiersAdmin = d.fichiers; prixDefaut = d.prix_defaut;
+    $('#etat-stockage').innerHTML = d.stockage ? '' : '<div class="alerte erreur">Stockage non configuré : ajoutez les variables B2_* (les mêmes qu\'Eaji) sur Railway.</div>';
+    $('#prix-defaut-info').textContent = `Laisser vide = prix par défaut : ${prixDefaut.document} $ pour un document ou une photo, ${prixDefaut.video} $ pour une vidéo (modifiables dans Réglages). Mettre 0 = gratuit.`;
+    $('#liste-fichiers').innerHTML = fichiersAdmin.map(f => `<div class="ligne-item" data-f="${f.id}" style="${f.actif ? '' : 'opacity:.55'}">
+      <span class="etiquette">${GENRES_F[f.genre]}</span> <strong>${esc(f.titre)}</strong>
+      <span class="petit">· ${esc(f.nom_fichier)} · ${poids(Number(f.taille))} · ${f.prix_usd == null ? 'prix par défaut (' + (f.genre === 'video' ? prixDefaut.video : prixDefaut.document) + ' $)' : f.prix_usd ? f.prix_usd + ' $' : 'gratuit'}
+        · ${f.ventes} vente(s) · ${f.par_membres} téléchargement(s) par des membres${f.actif ? '' : ' · retiré'}</span>
+      ${f.description ? `<div class="petit">${esc(f.description)}</div>` : ''}
+      <div class="actions"><button class="btn btn-contour btn-petit" data-fa="modifier">Modifier</button>
+        <button class="btn btn-contour btn-petit" data-fa="actif">${f.actif ? 'Retirer du site' : 'Remettre sur le site'}</button>
+        <button class="btn btn-contour btn-petit" data-fa="supprimer" style="color:var(--rouge)">Supprimer</button></div>
+    </div>`).join('') || '<p class="petit">Aucun fichier publié.</p>';
+    const { achats } = await A('/admin/achats');
+    $('#liste-achats').innerHTML = achats.map(a => `<div class="ligne-item">
+      ${badge(a.statut)} <strong>${montant(a.montant, a.devise)}</strong> <span class="petit">· ${esc(a.titre)} · ${esc(a.reference)} · ${heure(a.cree_le)}</span>
+      <div>${esc(a.nom || 'Sans nom')} — ${esc(a.contact || '')}</div>
+      <div class="petit">${a.mode === 'cinetpay' ? 'Paiement en ligne' : 'Envoi manuel'}${a.operateur ? ' · ' + esc(a.operateur) : ''}${a.ref_paiement && a.mode === 'manuel' ? ' · réf. ' + esc(a.ref_paiement) : ''}${a.statut === 'paye' ? ' · ' + a.telechargements + ' téléchargement(s)' : ''}</div>
+      <div class="actions">${boutonsPaiement(a)}</div></div>`).join('') || '<p class="petit">Aucune vente pour le moment.</p>';
+  } catch (e) { erreur(e); }
+}
+$('#liste-achats').onclick = async e => { const b = e.target.closest('[data-pay]'); if (b && await confirmerPaiement(b.dataset.pay, b.dataset.s)) charger(); };
+$('#liste-fichiers').onclick = async e => {
+  const b = e.target.closest('[data-fa]'); if (!b) return;
+  const f = fichiersAdmin.find(x => x.id == b.closest('[data-f]').dataset.f);
+  try {
+    if (b.dataset.fa === 'modifier') {
+      const titre = prompt('Titre :', f.titre); if (titre === null) return;
+      const description = prompt('Description :', f.description || ''); if (description === null) return;
+      const prix = prompt('Prix en $ (vide = prix par défaut, 0 = gratuit) :', f.prix_usd ?? ''); if (prix === null) return;
+      const d = await A('/admin/fichiers/' + f.id, { method: 'PATCH', body: JSON.stringify({ titre, description, prix_usd: prix.trim(), actif: f.actif }) }); commun_toast(d.message);
+    }
+    if (b.dataset.fa === 'actif') await A('/admin/fichiers/' + f.id, { method: 'PATCH', body: JSON.stringify({ titre: f.titre, description: f.description, prix_usd: f.prix_usd ?? '', actif: !f.actif }) });
+    if (b.dataset.fa === 'supprimer') { if (!confirm('Supprimer « ' + f.titre + ' » ?')) return; const d = await A('/admin/fichiers/' + f.id, { method: 'DELETE' }); alert(d.message); }
+    chargerFichiers();
+  } catch (err) { erreur(err); }
+};
+const commun_toast = t => { const el = $('#alerte-generale'); message(el, t, 'ok'); setTimeout(() => el.hidden = true, 4000); };
+function envoyerXhr(methode, url, corps, entetes, progression) {
+  return new Promise((ok, ko) => {
+    const x = new XMLHttpRequest(); x.open(methode, url);
+    for (const [k, v] of Object.entries(entetes)) x.setRequestHeader(k, v);
+    x.upload.onprogress = e => e.lengthComputable && progression(e.loaded / e.total);
+    x.onload = () => x.status >= 200 && x.status < 300 ? ok() : ko(Object.assign(new Error('Envoi refusé (' + x.status + ')'), { status: x.status }));
+    x.onerror = () => ko(new Error('réseau'));
+    x.send(corps);
+  });
+}
+$('#form-fichier').onsubmit = async e => {
+  e.preventDefault();
+  const f = e.target, msg = f.querySelector('.alerte'), btn = f.querySelector('button'), fichier = f.fichier.files[0];
+  msg.hidden = true;
+  if (!fichier) return message(msg, 'Choisissez un fichier.', 'erreur');
+  if (f.titre.value.trim().length < 3) return message(msg, 'Indiquez un titre.', 'erreur');
+  btn.disabled = true;
+  const barre = $('#barre-envoi'), maj = p => { barre.hidden = false; barre.querySelector('span').style.width = Math.round(p * 100) + '%'; barre.querySelector('em').textContent = Math.round(p * 100) + ' %'; };
+  try {
+    const p = await A('/admin/fichiers/preparer', { method: 'POST', body: JSON.stringify({ nom: fichier.name, taille: fichier.size, type: fichier.type }) });
+    maj(0);
+    try { await envoyerXhr('PUT', p.url_envoi, fichier, { 'Content-Type': p.type }, maj); }
+    catch { // envoi direct impossible : on passe par le serveur
+      maj(0);
+      await envoyerXhr('PUT', `${ONGD.api}/admin/fichiers/relais?cle=${encodeURIComponent(p.cle)}&type=${encodeURIComponent(p.type)}`, fichier,
+        { 'Content-Type': 'application/octet-stream', Authorization: 'Bearer ' + token }, maj);
+    }
+    const d = await A('/admin/fichiers', { method: 'POST', body: JSON.stringify({ titre: f.titre.value, description: f.description.value, prix_usd: f.prix_usd.value, cle: p.cle, nom_fichier: fichier.name }) });
+    message(msg, d.message, 'ok'); f.reset(); chargerFichiers();
+  } catch (err) { if (err.status === 401) erreur(err); else message(msg, err.message === 'réseau' ? 'Envoi interrompu : vérifiez la connexion et réessayez.' : err.message, 'erreur'); }
+  barre.hidden = true; btn.disabled = false;
+};
+
+/* ================= Membres et consultations ================= */
+let vueMembres = 'membres', membresAdmin = [];
+$('#filtre-membres').onclick = e => { const b = e.target.closest('button'); if (!b) return; vueMembres = b.dataset.v;
+  document.querySelectorAll('#filtre-membres button').forEach(x => x.classList.toggle('actif', x === b)); chargerMembres(); };
+async function chargerMembres() {
+  $('#vue-liste-membres').hidden = vueMembres !== 'membres'; $('#vue-consultations').hidden = vueMembres !== 'consultations';
+  try {
+    if (vueMembres === 'membres') {
+      ({ membres: membresAdmin } = await A('/admin/membres'));
+      const n = { honneur: membresAdmin.filter(m => m.a_jour && m.categorie === 'honneur').length, vip: membresAdmin.filter(m => m.a_jour && m.categorie === 'vip').length };
+      $('#totaux-membres').innerHTML = `<div><strong>${n.honneur}</strong><span class="petit">membre(s) d'honneur à jour</span></div><div><strong>${n.vip}</strong><span class="petit">membre(s) VIP à jour</span></div>`;
+      $('#liste-membres').innerHTML = membresAdmin.map(m => `<div class="ligne-item" data-m="${m.id}">
+        <span class="etiquette ${m.categorie === 'vip' ? '' : 'or'}">${m.categorie === 'vip' ? 'VIP' : 'Honneur'}</span>
+        ${m.statut === 'suspendu' ? '<span class="statut suspendu">Suspendu</span>' : m.a_jour ? `<span class="statut">À jour → ${new Date(m.expire_le).toLocaleDateString('fr-FR')}</span>` : m.statut === 'en_attente' ? '<span class="statut en_attente">Première cotisation en attente</span>' : `<span class="statut annule">Expiré le ${new Date(m.expire_le).toLocaleDateString('fr-FR')}</span>`}
+        <strong>${esc(m.nom)}</strong> <span class="petit">+${esc(m.telephone)}${m.email ? ' · ' + esc(m.email) : ''}${m.organisation ? ' · ' + esc(m.organisation) : ''}</span>
+        ${m.cotisations.filter(c => ['declare', 'en_attente'].includes(c.statut) && c.mode === 'manuel').map(c => `<div class="petit" style="margin-top:6px">${badge(c.statut)} ${montant(Number(c.montant), c.devise)} · ${c.categorie === 'vip' ? 'VIP' : 'Honneur'} · ${esc(c.reference)}${c.ref_paiement ? ' · réf. ' + esc(c.ref_paiement) : ''}
+          <div class="actions">${boutonsPaiement(c)}</div></div>`).join('')}
+        <div class="actions">
+          ${m.statut === 'suspendu' ? '<button class="btn btn-contour btn-petit" data-ms="actif">Réactiver</button>' : '<button class="btn btn-contour btn-petit" data-ms="suspendu" style="color:var(--rouge)">Suspendre</button>'}
+          <a class="btn btn-contour btn-petit" href="https://wa.me/${esc(m.telephone)}" target="_blank" rel="noopener">WhatsApp</a>
+        </div></div>`).join('') || '<p class="petit">Aucun membre pour le moment.</p>';
+    } else {
+      const { consultations } = await A('/admin/consultations');
+      const props = consultations.filter(c => c.statut === 'proposee'), autres = consultations.filter(c => c.statut !== 'proposee');
+      const res = c => c.options.map(o => { const v = c.resultats[o] || { total: 0, honneur: 0, vip: 0 };
+        return `<div class="petit">• <strong>${esc(o)}</strong> : ${v.total} vote(s) <span>(honneur ${v.honneur || 0} · VIP ${v.vip || 0})</span></div>`; }).join('');
+      $('#liste-consultations').innerHTML =
+        (props.length ? '<h3>Propositions des membres</h3>' + props.map(c => `<div class="ligne-item" data-co="${c.id}">
+          <span class="statut en_attente">Proposée par ${esc(c.propose_par_nom || 'un membre')}</span><h3 style="margin:8px 0 2px">${esc(c.titre)}</h3>
+          <p class="texte-long" style="margin:6px 0">${esc(c.texte || '')}</p>
+          <div class="actions"><button class="btn btn-vert btn-petit" data-cs="ouverte">Soumettre au vote</button><button class="btn btn-contour btn-petit" data-cs="refusee">Ne pas retenir</button></div></div>`).join('') : '')
+        + '<h3 style="margin-top:18px">Consultations</h3>' + (autres.map(c => `<div class="ligne-item" data-co="${c.id}">
+          ${badge(c.statut)} ${c.public === 'vip' ? '<span class="etiquette">VIP seulement</span>' : '<span class="etiquette">Tous les membres</span>'}
+          <h3 style="margin:8px 0 2px">${esc(c.titre)}</h3>
+          <div class="petit">${c.date_limite ? 'Jusqu\'au ' + heure(c.date_limite) : 'Sans date limite'}${c.propose_par_nom ? ' · proposée par ' + esc(c.propose_par_nom) : ''}</div>
+          ${c.texte ? `<p class="texte-long" style="margin:6px 0">${esc(c.texte)}</p>` : ''}
+          ${res(c)}
+          ${c.avis.length ? `<details style="margin-top:6px"><summary>${c.avis.length} avis</summary>${c.avis.map(a => `<div class="message-fil"><span class="auteur">${esc(a.nom)}</span> <span class="petit">${a.categorie === 'vip' ? 'VIP' : 'Honneur'}</span><p style="margin:4px 0 0">${esc(a.texte)}</p></div>`).join('')}</details>` : ''}
+          <div class="actions">${c.statut === 'ouverte' ? '<button class="btn btn-contour btn-petit" data-cs="close">Clore le vote</button>' : '<button class="btn btn-contour btn-petit" data-cs="ouverte">Rouvrir</button>'}
+            <button class="btn btn-contour btn-petit" data-cs="supprimer" style="color:var(--rouge)">Supprimer</button></div></div>`).join('') || '<p class="petit">Aucune consultation.</p>');
+    }
+  } catch (e) { erreur(e); }
+}
+$('#liste-membres').onclick = async e => {
+  const pay = e.target.closest('[data-pay]'), ms = e.target.closest('[data-ms]');
+  if (pay && await confirmerPaiement(pay.dataset.pay, pay.dataset.s)) return charger();
+  if (ms) { if (ms.dataset.ms === 'suspendu' && !confirm('Suspendre ce membre ? Il ne pourra plus se connecter.')) return;
+    try { await A('/admin/membres/' + ms.closest('[data-m]').dataset.m, { method: 'PATCH', body: JSON.stringify({ statut: ms.dataset.ms }) }); chargerMembres(); } catch (err) { erreur(err); } }
+};
+$('#liste-consultations').onclick = async e => {
+  const b = e.target.closest('[data-cs]'); if (!b) return;
+  const id = b.closest('[data-co]').dataset.co;
+  try {
+    if (b.dataset.cs === 'supprimer') { if (!confirm('Supprimer cette consultation, ses votes et ses avis ?')) return; await A('/admin/consultations/' + id, { method: 'DELETE' }); }
+    else await A('/admin/consultations/' + id, { method: 'PATCH', body: JSON.stringify({ statut: b.dataset.cs }) });
+    charger();
+  } catch (err) { erreur(err); }
+};
+$('#form-consultation').onsubmit = async e => {
+  e.preventDefault();
+  const f = e.target, msg = f.querySelector('.alerte'), btn = f.querySelector('button'); btn.disabled = true;
+  try {
+    const d = await A('/admin/consultations', { method: 'POST', body: JSON.stringify({ titre: f.titre.value, texte: f.texte.value, options: f.options.value,
+      public: f.public.value, date_limite: versIso(f.date_limite.value) }) });
+    message(msg, d.message, 'ok'); f.reset(); chargerMembres();
+  } catch (err) { if (err.status === 401) erreur(err); else message(msg, err.message, 'erreur'); }
+  btn.disabled = false;
+};
+$('#btn-csv-cotisations').onclick = () => telecharger('/admin/cotisations.csv', 'cotisations-membres.csv');
 
 function demarrer() { montrer(true); charger(); }
 if (token) demarrer(); else montrer(false);

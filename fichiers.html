@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://eajimmy-production.up.railway.app; connect-src 'self' https://eajimmy-production.up.railway.app; frame-src https://www.youtube.com https://www.youtube-nocookie.com; base-uri 'self'; form-action 'self'; object-src 'none'">
+<title>Documents et vidéos — ONGD Les Volontaires</title>
+<meta name="description" content="Rapports, présentations, photos et vidéos de l'ONGD Les Volontaires à télécharger.">
+<meta name="theme-color" content="#10392a">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+</head>
+<body>
+<header data-commun></header>
+<main>
+  <section class="tete-page">
+    <div class="conteneur">
+      <span class="sur-titre">Documents et vidéos</span>
+      <h1>Nos fichiers à télécharger</h1>
+      <p>Rapports, présentations, photos et vidéos de nos actions. Chaque téléchargement soutient l'ONGD. Les membres d'honneur et VIP téléchargent gratuitement.</p>
+    </div>
+  </section>
+  <section>
+    <div class="conteneur">
+      <div class="carte" id="bandeau-membre" style="margin-bottom:20px"></div>
+      <div class="filtres" id="filtres">
+        <button data-g="" class="actif">Tout</button><button data-g="document">Documents</button><button data-g="photo">Photos</button><button data-g="video">Vidéos</button>
+      </div>
+      <div class="grille-3" id="liste"></div>
+    </div>
+  </section>
+</main>
+<footer data-commun></footer>
+<a class="whatsapp" href="https://wa.me/243850171480" target="_blank" rel="noopener" aria-label="WhatsApp"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2z"/></svg></a>
+
+<dialog id="dlg">
+  <button class="dlg-fermer" aria-label="Fermer" onclick="this.closest('dialog').close()">×</button>
+  <div class="dlg-corps" id="dlg-contenu"></div>
+</dialog>
+
+<script src="commun.js"></script>
+<script>
+const { esc, api, montant, message, lire, ecrire } = outils;
+const $ = s => document.querySelector(s);
+const GENRES = { document: 'Document', photo: 'Photo', video: 'Vidéo' };
+const ICONES = { document: '📄', photo: '🖼️', video: '🎬' };
+const poids = o => o >= 1073741824 ? (o / 1073741824).toFixed(1).replace('.', ',') + ' Go' : o >= 1048576 ? (o / 1048576).toFixed(1).replace('.', ',') + ' Mo' : Math.max(1, Math.round(o / 1024)) + ' Ko';
+let fichiers = [], filtre = '', moi = null;
+const jeton = () => lire('ongd_membre_token');
+
+async function chargerMembre() {
+  const b = $('#bandeau-membre');
+  if (jeton()) {
+    try { moi = await api('/membres/moi', {}, jeton()); } catch (e) { if (e.status === 401) ecrire('ongd_membre_token', null); moi = null; }
+  }
+  if (moi && moi.actif) b.innerHTML = `<strong>${esc(moi.categorie_nom)} — ${esc(moi.nom)}</strong><p class="petit" style="margin:4px 0 0">Vos téléchargements sont gratuits jusqu'au ${new Date(moi.expire_le).toLocaleDateString('fr-FR')}. <a href="membres.html">Mon espace membre</a></p>`;
+  else if (moi) b.innerHTML = `<strong>${esc(moi.nom)}</strong><p class="petit" style="margin:4px 0 0">Votre cotisation n'est pas à jour. <a href="membres.html">Renouveler pour télécharger gratuitement</a></p>`;
+  else b.innerHTML = `<strong>Membre d'honneur ou VIP ?</strong><p class="petit" style="margin:4px 0 0">Téléchargez tout gratuitement et participez aux décisions de l'ONGD. <a href="membres.html">Se connecter ou devenir membre</a></p>`;
+  dessiner();
+}
+async function charger() {
+  try { fichiers = (await api('/fichiers')).fichiers; } catch (e) { $('#liste').innerHTML = `<div class="vide">${esc(e.message)}</div>`; return; }
+  dessiner();
+}
+function dessiner() {
+  const l = fichiers.filter(f => !filtre || f.genre === filtre);
+  const gratuitMembre = moi && moi.actif;
+  $('#liste').innerHTML = l.length ? l.map(f => `<div class="carte" data-id="${f.id}">
+      <div style="font-size:2.2rem;line-height:1">${ICONES[f.genre]}</div>
+      <div class="etiquettes"><span class="etiquette">${GENRES[f.genre]}</span><span class="etiquette" data-no-tr>${esc(f.extension.toUpperCase())} · ${poids(f.taille)}</span></div>
+      <h3>${esc(f.titre)}</h3>
+      ${f.description ? `<p class="petit">${esc(f.description)}</p>` : ''}
+      <div class="prix" style="margin:10px 0">${gratuitMembre || !f.prix_usd ? 'Gratuit' + (gratuitMembre && f.prix_usd ? ' pour vous' : '') : `${f.prix_usd} $ <span class="petit">· ${montant(f.prix_cdf, 'CDF')}</span>`}</div>
+      <button class="btn ${gratuitMembre ? 'btn-vert' : 'btn-don'}" style="width:100%" data-tel>Télécharger</button>
+    </div>`).join('') : '<div class="vide">Aucun fichier pour le moment.</div>';
+}
+$('#filtres').onclick = e => { const b = e.target.closest('button'); if (!b) return; filtre = b.dataset.g;
+  document.querySelectorAll('#filtres button').forEach(x => x.classList.toggle('actif', x === b)); dessiner(); };
+
+$('#liste').onclick = async e => {
+  if (!e.target.closest('[data-tel]')) return;
+  const f = fichiers.find(x => x.id == e.target.closest('[data-id]').dataset.id);
+  if (moi && moi.actif) {
+    try { const d = await api(`/membres/fichiers/${f.id}/telecharger`, { method: 'POST' }, jeton()); location.href = d.url; commun.toast('Téléchargement lancé.'); }
+    catch (err) { commun.toast(err.message); }
+    return;
+  }
+  $('#dlg-contenu').innerHTML = `
+    <span class="etiquette">${GENRES[f.genre]}</span>
+    <h2 style="margin-top:10px">${esc(f.titre)}</h2>
+    <p class="petit">${esc(f.extension.toUpperCase())} · ${poids(f.taille)}</p>
+    ${f.prix_usd ? `<p>Prix du téléchargement : <strong>${f.prix_usd} $</strong> (${montant(f.prix_cdf, 'CDF')}). Après le paiement, le lien reste valable 48 heures (3 téléchargements possibles si le réseau coupe).</p>` : '<p>Ce fichier est gratuit.</p>'}
+    <form id="form-achat" novalidate>
+      <input name="site_web" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
+      <div class="deux">
+        <div class="champ"><label>Votre nom</label><input name="nom" autocomplete="name" value="${esc(lire('ongd_nom') || '')}"></div>
+        <div class="champ"><label>Téléphone ou e-mail</label><input name="contact" required autocomplete="tel" placeholder="+243…"></div>
+      </div>
+      ${f.prix_usd ? `<div class="champ"><label>Payer en</label><select name="devise"><option value="USD">Dollars (${f.prix_usd} $)</option><option value="CDF">Francs congolais (${montant(f.prix_cdf, 'CDF')})</option></select></div>` : ''}
+      <button class="btn btn-don" style="width:100%">${f.prix_usd ? 'Payer et télécharger' : 'Télécharger'}</button>
+      <div class="alerte" hidden></div>
+    </form>
+    <div id="suite"></div>
+    <p class="petit" style="margin-top:14px">Vous téléchargez souvent ? <a href="membres.html">Devenez membre</a> : tous les fichiers sont gratuits pour les membres.</p>`;
+  $('#dlg').showModal();
+  const fo = $('#form-achat');
+  fo.onsubmit = async ev => {
+    ev.preventDefault();
+    const msg = fo.querySelector('.alerte'), btn = fo.querySelector('button'); msg.hidden = true; btn.disabled = true;
+    try {
+      const d = await api(`/fichiers/${f.id}/acheter`, { method: 'POST', body: JSON.stringify({ nom: fo.nom.value, contact: fo.contact.value,
+        devise: fo.devise ? fo.devise.value : 'USD', site_web: fo.site_web.value }) });
+      ecrire('ongd_nom', fo.nom.value);
+      if (d.gratuit) { location.href = ONGD.api + '/telecharger/' + d.jeton; $('#dlg').close(); return; }
+      fo.hidden = true; commun.paiement($('#suite'), d);
+    } catch (err) { message(msg, err.message, 'erreur'); }
+    btn.disabled = false;
+  };
+};
+charger(); chargerMembre();
+</script>
+</body>
+</html>

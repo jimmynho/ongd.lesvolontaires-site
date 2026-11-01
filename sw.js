@@ -1,11 +1,11 @@
 /* ONGD Les Volontaires — fonctionnement hors réseau
    Les pages s'ouvrent même sans réseau (dernière version enregistrée sur le téléphone).
    Changez le numéro de VERSION à chaque mise à jour du site pour rafraîchir les téléphones. */
-const VERSION = 'ongd-v2';
+const VERSION = 'ongd-v8';
 const PAGES = ['./', 'index.html', 'formations.html', 'boutique.html', 'dialogue.html', 'direct.html', 'annonces.html', 'paiement.html',
-  'volontaire.html', 'style.css', 'config.js', 'commun.js', 'logo.svg', 'icone-192.png', 'icone-512.png', 'manifest.webmanifest'];
+  'volontaire.html', 'fichiers.html', 'membres.html', 'style.css', 'config.js', 'commun.js', 'logo.svg', 'logo-officiel.jpg', 'icone-192.png', 'icone-512.png', 'manifest.webmanifest'];
 // Données publiques gardées pour la lecture hors réseau
-const API_PUBLIQUE = /\/api\/ongd\/(activites|stats|programmes|produits|sujets|directs|annonces\/actives|annonces\/forfaits|photos\/|media\/)/;
+const API_PUBLIQUE = /\/api\/ongd\/(activites|stats|programmes|produits|sujets|directs|annonces\/actives|annonces\/forfaits|fichiers$|membres\/offre|photos\/|media\/)/;
 
 self.addEventListener('install', e => e.waitUntil(caches.open(VERSION).then(c => c.addAll(PAGES)).then(() => self.skipWaiting())));
 self.addEventListener('activate', e => e.waitUntil(
