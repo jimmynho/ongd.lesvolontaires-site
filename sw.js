@@ -1,7 +1,7 @@
 /* ONGD Les Volontaires — fonctionnement hors réseau
    Les pages s'ouvrent même sans réseau (dernière version enregistrée sur le téléphone).
    Changez le numéro de VERSION à chaque mise à jour du site pour rafraîchir les téléphones. */
-const VERSION = 'ongd-v11';
+const VERSION = 'ongd-v13';
 const PAGES = ['./', 'index.html', 'formations.html', 'boutique.html', 'dialogue.html', 'direct.html', 'annonces.html', 'paiement.html',
   'volontaire.html', 'fichiers.html', 'membres.html', 'style.css', 'config.js', 'commun.js', 'logo.svg', 'logo-officiel.jpg', 'bienvenue.jpg', 'icone-192.png', 'icone-512.png', 'manifest.webmanifest'];
 // Données publiques gardées pour la lecture hors réseau

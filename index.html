@@ -87,6 +87,22 @@
     <a href="annonces.html">Publier une annonce</a>
     <a href="volontaire.html">Espace volontaire</a>
   </nav>
+  <nav class="ruban" aria-label="Rubriques du site">
+    <a class="don" href="#don">Faire un don</a>
+    <a href="#apropos">Qui sommes-nous</a>
+    <a href="#activites">Nos activités</a>
+    <a href="formations.html">Formations</a>
+    <a href="fichiers.html">Documents et vidéos</a>
+    <a href="membres.html">Membres d'honneur et VIP</a>
+    <a href="boutique.html">Boutique</a>
+    <a href="dialogue.html">Dialogue</a>
+    <a href="direct.html">En direct</a>
+    <a href="annonces.html">Publier une annonce</a>
+    <a href="#partenariat">Devenir partenaire</a>
+    <a href="#volontaire">Devenir volontaire</a>
+    <a href="volontaire.html">Espace volontaire</a>
+    <a href="#contact">Contact</a>
+  </nav>
 </header>
 
 <main>
@@ -99,6 +115,15 @@
         <a class="btn btn-don" href="#don">Faire un don</a>
         <a class="btn btn-contour" href="#activites">Voir nos activités</a>
       </div>
+    </div>
+  </section>
+
+  <!-- À LA UNE : les 3 dernières publications défilent -->
+  <section class="une" id="une" hidden aria-label="Dernières publications">
+    <div class="conteneur">
+      <div class="une-tete"><span class="sur-titre">Actualité</span><a href="#activites">Tout voir</a></div>
+      <div class="une-piste" id="une-piste"></div>
+      <div class="une-points" id="une-points"></div>
     </div>
   </section>
 
@@ -403,6 +428,7 @@ async function chargerActivites() {
     const d = await api('/activites?page=' + page);
     if (page === 1 && !d.activites.length) { liste.innerHTML = '<div class="vide">Les premières activités arrivent bientôt.</div>'; return; }
     d.activites.forEach(a => cache[a.id] = a);
+    if (page === 1) alaUne(d.activites.slice(0, 3));
     liste.insertAdjacentHTML('beforeend', d.activites.map(a => `
       <button class="carte activite" data-id="${a.id}">
         <div class="image" style="${a.photos.length ? `background-image:url('${photo(a.photos[0])}')` : ''}">${a.photos.length > 1 ? `<span class="nb">${a.photos.length} photos</span>` : ''}</div>
@@ -418,7 +444,35 @@ async function chargerActivites() {
   }
 }
 $('#plus-activites').onclick = () => { page++; chargerActivites(); };
-$('#liste-activites').onclick = e => {
+/* Les 3 dernières publications défilent toutes seules en haut de la page */
+function alaUne(l) {
+  if (!l.length) return;
+  const piste = $('#une-piste'), points = $('#une-points');
+  piste.innerHTML = l.map(a => `
+    <button class="carte activite une-carte" data-id="${a.id}">
+      <div class="image" style="${a.photos.length ? `background-image:url('${photo(a.photos[0])}')` : ''}"></div>
+      <div class="corps">
+        <div class="meta">${esc(date(a.date_activite || a.publie_le))}${a.lieu ? ' · ' + esc(a.lieu) : ''}</div>
+        <h3>${esc(a.titre)}</h3>
+        <p>${esc(a.texte)}</p>
+      </div>
+    </button>`).join('');
+  points.innerHTML = l.length > 1 ? l.map((_, i) => `<button aria-label="Publication ${i + 1}"></button>`).join('') : '';
+  $('#une').hidden = false;
+  const cartes = [...piste.children], boutons = [...points.children];
+  let i = 0, pause = false;
+  const aller = n => { i = (n + cartes.length) % cartes.length; piste.scrollTo({ left: cartes[i].offsetLeft - piste.offsetLeft, behavior: 'smooth' }); marquer(); };
+  const marquer = () => boutons.forEach((b, k) => b.classList.toggle('actif', k === i));
+  boutons.forEach((b, k) => b.onclick = () => aller(k));
+  marquer();
+  ['pointerdown', 'touchstart', 'mouseenter', 'focusin'].forEach(ev => piste.addEventListener(ev, () => pause = true, { passive: true }));
+  ['pointerup', 'touchend', 'mouseleave', 'focusout'].forEach(ev => piste.addEventListener(ev, () => setTimeout(() => pause = false, 2500), { passive: true }));
+  let attente; piste.addEventListener('scroll', () => { clearTimeout(attente); attente = setTimeout(() => {
+    let proche = 0; cartes.forEach((c, k) => { if (Math.abs(c.offsetLeft - piste.offsetLeft - piste.scrollLeft) < Math.abs(cartes[proche].offsetLeft - piste.offsetLeft - piste.scrollLeft)) proche = k; });
+    i = proche; marquer(); }, 120); }, { passive: true });
+  setInterval(() => { if (pause || document.hidden || $('#dlg-activite').open) return; if (piste.scrollWidth <= piste.clientWidth + 4) return; aller(i + 1); }, 4500);
+}
+$('#une-piste').onclick = $('#liste-activites').onclick = e => {
   const c = e.target.closest('[data-id]'); if (!c) return;
   const a = cache[c.dataset.id];
   $('#dlg-contenu').innerHTML = `

@@ -273,3 +273,33 @@ input:focus, select:focus, textarea:focus { outline: 3px solid rgba(229,154,47,.
 .affiche img { width: 100%; height: auto; }
 .affiche span { position: absolute; right: 12px; bottom: 12px; background: rgba(16,57,42,.88); color: #fff; padding: 8px 14px; border-radius: 99px; font-weight: 700; font-size: .9rem; }
 .bandeau-absence { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; background: #fdf1de; color: #6b4410; padding: 9px 16px; font-size: .93rem; font-weight: 600; text-align: center; border-bottom: 1px solid #f1d3a3; }
+/* Graphique des visites */
+.graphe { display: flex; align-items: flex-end; gap: 2px; height: 140px; padding: 6px 0 22px; position: relative; border-bottom: 1px solid var(--ligne); }
+.baton { flex: 1; height: 100%; display: flex; align-items: flex-end; min-width: 2px; }
+.baton span { display: block; width: 100%; background: var(--vert); border-radius: 3px 3px 0 0; min-height: 1px; }
+.baton:hover span { background: var(--soleil); }
+.graphe-legende { position: absolute; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; font-size: .75rem; color: var(--gris); }
+
+/* Rubriques visibles à l'horizontale sous l'en-tête (téléphones et petits écrans) */
+.ruban { display: flex; gap: 6px; overflow-x: auto; padding: 8px 16px; border-top: 1px solid var(--ligne); scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.ruban::-webkit-scrollbar { display: none; }
+.ruban a { flex: none; white-space: nowrap; text-decoration: none; color: var(--vert-fonce); background: var(--vert-pale); padding: 7px 13px; border-radius: 999px; font-size: .9rem; font-weight: 700; }
+.ruban a.don { background: var(--soleil); color: #2b1a04; }
+.ruban a[aria-current="page"] { background: var(--vert-fonce); color: #fff; }
+@media (min-width: 1360px) { .ruban { display: none; } }
+@media (max-width: 1359px) { html { scroll-padding-top: 122px; } }
+/* À la une : les 3 dernières publications défilent */
+.une { padding: 26px 0 8px; }
+.une-tete { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+.une-tete a { font-weight: 700; font-size: .92rem; color: var(--vert-fonce); }
+.une-piste { display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding-bottom: 4px; }
+.une-piste::-webkit-scrollbar { display: none; }
+.une-carte { flex: 0 0 100%; scroll-snap-align: start; flex-direction: row; align-items: stretch; }
+.une-carte .image { flex: 0 0 38%; aspect-ratio: auto; min-height: 132px; }
+.une-carte .corps { padding: 14px 16px; min-width: 0; }
+.une-carte h3 { font-size: 1.05rem; margin: 0 0 4px; }
+.une-carte p { -webkit-line-clamp: 2; }
+.une-points { display: flex; justify-content: center; gap: 8px; margin-top: 12px; }
+.une-points button { width: 9px; height: 9px; padding: 0; border: 0; border-radius: 50%; background: var(--ligne); cursor: pointer; }
+.une-points button.actif { background: var(--soleil); width: 24px; border-radius: 99px; }
+@media (min-width: 760px) { .une-carte { flex-basis: calc(50% - 7px); } }

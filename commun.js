@@ -30,7 +30,12 @@
       <nav class="tiroir" id="tiroir" aria-label="Menu mobile">
         <a href="./">Accueil</a>${LIENS.map(([h, t]) => `<a href="${h}">${t}</a>`).join('')}
         <a href="annonces.html">Publier une annonce</a><a href="./#don">Faire un don</a><a href="volontaire.html">Espace volontaire</a>
+      </nav>
+      <nav class="ruban" aria-label="Rubriques du site">
+        <a class="don" href="./#don">Faire un don</a><a href="./">Accueil</a>${LIENS.map(([h, t]) => `<a href="${h}"${h === page ? ' aria-current="page"' : ''}>${t}</a>`).join('')}
+        <a href="annonces.html"${page === 'annonces.html' ? ' aria-current="page"' : ''}>Publier une annonce</a><a href="volontaire.html"${page === 'volontaire.html' ? ' aria-current="page"' : ''}>Espace volontaire</a>
       </nav>`;
+    const actif = hote.querySelector('.ruban [aria-current]'); if (actif) hote.querySelector('.ruban').scrollLeft = actif.offsetLeft - 60;
     $('#burger').onclick = () => { const o = $('#tiroir').classList.toggle('ouvert'); $('#burger').setAttribute('aria-expanded', o); };
   }
 
@@ -258,6 +263,14 @@
       btn.disabled = false;
     };
     conteneur.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  /* ================= COMPTEUR DE VISITES (anonyme) ================= */
+  if (!/admin\.html$/.test(location.pathname) && navigator.onLine) {
+    let zone = ''; try { zone = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch {}
+    const page = (location.pathname.split('/').pop() || 'index.html') + (location.hash && location.hash.length < 25 ? location.hash : '');
+    fetch(ONGD.api + '/visite', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ page, ref: document.referrer, utm: new URLSearchParams(location.search).get('utm_source') || '', zone, langue: (navigator.language || '').slice(0, 10) }) }).catch(() => {});
   }
 
   /* ================= HORS RÉSEAU ================= */
