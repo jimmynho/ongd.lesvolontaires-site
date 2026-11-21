@@ -303,3 +303,29 @@ input:focus, select:focus, textarea:focus { outline: 3px solid rgba(229,154,47,.
 .une-points button { width: 9px; height: 9px; padding: 0; border: 0; border-radius: 50%; background: var(--ligne); cursor: pointer; }
 .une-points button.actif { background: var(--soleil); width: 24px; border-radius: 99px; }
 @media (min-width: 760px) { .une-carte { flex-basis: calc(50% - 7px); } }
+
+/* Publication entière : vidéo, J'aime, commentaires, partage */
+.activite .image .lecture { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 52px; height: 52px; border-radius: 50%; background: rgba(16,57,42,.82); color: #fff; display: grid; place-items: center; }
+.activite .image.sans-photo { background: var(--vert-fonce); }
+.activite .compteurs { margin-top: 10px; font-size: .85rem; font-weight: 700; color: var(--vert-fonce); }
+.video-pub { width: 100%; max-height: 70vh; background: #000; border-radius: 10px; margin: 6px 0 14px; }
+.resume-react { margin-top: 18px; font-size: .88rem; font-weight: 700; color: var(--gris); min-height: 1.2em; }
+.reactions { display: flex; gap: 4px; border-top: 1px solid var(--ligne); border-bottom: 1px solid var(--ligne); padding: 6px 0; margin-top: 8px; }
+.react { flex: 1 1 0; min-width: 0; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 4px; background: none; border: 0; border-radius: 10px; font: inherit; font-weight: 700; font-size: .92rem; color: var(--encre); cursor: pointer; }
+.react:hover { background: var(--vert-pale); }
+.react[aria-pressed="true"] { color: #c8323c; }
+.react svg { flex: none; }
+@media (max-width: 340px) { .react span { display: none; } }
+.partage { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 0 4px; }
+.partage .rs { flex: 1 1 calc(50% - 8px); text-align: center; text-decoration: none; padding: 10px 12px; border-radius: 10px; font: inherit; font-weight: 700; font-size: .9rem; border: 0; cursor: pointer; color: #fff; }
+.partage .fb { background: #1877f2; } .partage .wa { background: #1fa855; } .partage .tg { background: #229ed9; }
+.partage .x { background: #111; } .partage .in { background: #0a66c2; }
+.partage .copier, .partage .autre { background: var(--vert-pale); color: var(--vert-fonce); }
+.commentaires { margin-top: 18px; }
+.commentaires h3 { font-size: 1.1rem; margin: 0 0 10px; }
+.com { background: var(--creme); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; }
+.com p { margin: 4px 0 0; white-space: pre-line; }
+#form-com { display: grid; gap: 8px; margin-top: 12px; }
+#form-com input, #form-com textarea { width: 100%; font: inherit; padding: 10px 12px; border: 1px solid var(--ligne); border-radius: 10px; background: #fff; }
+#form-com .pot { position: absolute; left: -9999px; width: 1px; }
+.une-carte .compteurs { margin-top: 6px; }

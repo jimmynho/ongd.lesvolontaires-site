@@ -53,6 +53,7 @@
       <button data-o="reglages">Réglages</button>
       <button data-o="fichiers">Fichiers <span class="pastille" id="p-achats" hidden></span></button>
       <button data-o="membres">Membres <span class="pastille" id="p-membres" hidden></span></button>
+      <button data-o="visites">Visites</button>
       <button data-o="admins">Administrateurs</button>
       <button data-o="securite">Sécurité</button>
     </div>
@@ -68,8 +69,8 @@
 
     <!-- Publier en tant qu'ONGD -->
     <section class="boite etroit" data-panneau="publier" hidden style="padding:22px">
-      <h2 style="font-size:1.4rem">Publier une activité (équipe de l'ONGD)</h2>
-      <p class="petit">Publiée directement sur le site, sans validation.</p>
+      <h2 style="font-size:1.4rem" id="titre-publier">Publier une activité (équipe de l'ONGD)</h2>
+      <p class="petit" id="info-publier">Publiée directement sur le site, sans validation.</p>
       <form id="form-publier" novalidate>
         <div class="champ"><label for="a-titre">Titre</label><input id="a-titre" maxlength="150" required></div>
         <div class="deux">
@@ -78,7 +79,11 @@
         </div>
         <div class="champ"><label for="a-texte">Compte rendu</label><textarea id="a-texte" rows="7" required></textarea></div>
         <div class="champ"><label for="a-photos">Photos (jusqu'à 4)</label><input id="a-photos" type="file" accept="image/*" multiple><div class="apercus" id="apercus"></div></div>
-        <button class="btn btn-vert" style="width:100%">Publier sur le site</button>
+        <div class="champ"><label for="a-video">Vidéo <span class="facultatif">(facultatif : MP4, MOV, 3GP… 2 Go maximum)</span></label><input id="a-video" type="file" accept="video/*,.mp4,.mov,.3gp,.webm,.m4v">
+          <div class="petit" id="video-actuelle" hidden></div>
+          <div class="progression" id="barre-video" hidden style="height:auto;padding:0;position:relative"><span style="height:14px;width:0"></span><em class="petit" style="position:absolute;right:8px;top:-2px;font-style:normal"></em></div></div>
+        <button class="btn btn-vert" style="width:100%" id="btn-publier">Publier sur le site</button>
+        <button type="button" class="btn btn-contour" style="width:100%;margin-top:8px" id="annuler-edition" hidden>Annuler la modification</button>
         <div class="alerte" hidden></div>
       </form>
     </section>
@@ -216,6 +221,24 @@
       </form>
     </section>
 
+    <!-- Visites -->
+    <section class="boite" data-panneau="visites" hidden style="padding:22px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+        <div class="bascule" id="periode-visites" style="margin:0"><button data-j="7">7 jours</button><button data-j="30" class="actif">30 jours</button><button data-j="365">1 an</button></div>
+        <span class="petit" id="en-ligne"></span>
+      </div>
+      <div class="totaux" id="totaux-visites"></div>
+      <h3 style="margin-top:14px">Visiteurs par jour</h3>
+      <div id="graphe-visites" class="graphe"></div>
+      <div class="grille-3" style="margin-top:18px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
+        <div><h3>Pages les plus vues</h3><div id="top-pages"></div></div>
+        <div><h3>D'où viennent les visiteurs</h3><div id="top-sources"></div></div>
+        <div><h3>Pays et régions</h3><div id="top-regions"></div></div>
+        <div><h3>Appareils</h3><div id="top-appareils"></div></div>
+      </div>
+      <p class="petit" style="margin-top:14px">Comptage anonyme : aucun cookie et aucune adresse IP n'est enregistré. Un « visiteur » est une personne différente dans la journée ; une « vue » est une page ouverte. Le pays est déduit du fuseau horaire du téléphone.</p>
+    </section>
+
     <!-- Administrateurs secondaires -->
     <section class="boite" data-panneau="admins" hidden style="padding:22px">
       <p class="petit">Seul l'administrateur principal voit cet onglet, les réglages et la sécurité. Chaque administrateur secondaire ne voit que les parties de ses charges.</p>
@@ -340,7 +363,7 @@ $('#onglets').onclick = e => {
   charger();
 };
 function charger() { resume(); ({ activites: chargerAct, volontaires: chargerVol, dons: chargerDons, messages: chargerMsg, formations: chargerProg, boutique: chargerBoutique,
-  annonces: chargerAnnonces, dialogue: chargerSujets, direct: chargerDirects, reglages: chargerReglages, securite: chargerSecurite, fichiers: chargerFichiers, membres: chargerMembres, admins: chargerAdmins }[onglet] || (() => {}))(); }
+  annonces: chargerAnnonces, dialogue: chargerSujets, direct: chargerDirects, reglages: chargerReglages, securite: chargerSecurite, fichiers: chargerFichiers, membres: chargerMembres, admins: chargerAdmins, visites: chargerVisites }[onglet] || (() => {}))(); }
 
 async function resume() {
   try {
@@ -353,7 +376,20 @@ async function resume() {
 }
 
 /* ---------- Activités ---------- */
-let filtreAct = 'en_attente';
+let filtreAct = 'en_attente'; const actsAdmin = {};
+const lienPartage = id => ONGD.api + '/partage/' + id;
+function boutonsPartage(a) {
+  const u = encodeURIComponent(lienPartage(a.id)), t = encodeURIComponent(a.titre + ' — ONGD Les Volontaires');
+  return `<p class="petit" style="margin:10px 0 6px">Sur Facebook, choisissez « Partager sur une Page » pour publier sur la page de l'ONGD.</p>
+    <div class="actions">
+      <a class="btn btn-petit" style="background:#1877f2;color:#fff" target="_blank" rel="noopener" href="https://www.facebook.com/sharer/sharer.php?u=${u}">Facebook</a>
+      <a class="btn btn-petit" style="background:#1fa855;color:#fff" target="_blank" rel="noopener" href="https://wa.me/?text=${t}%20${u}">WhatsApp</a>
+      <a class="btn btn-petit" style="background:#229ed9;color:#fff" target="_blank" rel="noopener" href="https://t.me/share/url?url=${u}&text=${t}">Telegram</a>
+      <a class="btn btn-petit" style="background:#111;color:#fff" target="_blank" rel="noopener" href="https://twitter.com/intent/tweet?url=${u}&text=${t}">X (Twitter)</a>
+      <a class="btn btn-petit" style="background:#0a66c2;color:#fff" target="_blank" rel="noopener" href="https://www.linkedin.com/sharing/share-offsite/?url=${u}">LinkedIn</a>
+      <button class="btn btn-contour btn-petit" data-a="copier">Copier le lien</button>
+    </div>`;
+}
 $('#filtre-act').onclick = e => { const b = e.target.closest('button'); if (!b) return; filtreAct = b.dataset.s;
   document.querySelectorAll('#filtre-act button').forEach(x => x.classList.toggle('actif', x === b)); chargerAct(); };
 async function chargerAct() {
@@ -367,18 +403,37 @@ async function chargerAct() {
         <p class="texte-long" style="margin:8px 0">${esc(a.texte)}</p>
         ${a.photos.length ? `<div class="vignettes">${a.photos.map(p => `<a href="${photo(p, token)}" target="_blank"><img src="${photo(p, token)}" alt=""></a>`).join('')}</div>` : ''}
         ${a.motif_refus ? `<p class="petit">Motif du refus : ${esc(a.motif_refus)}</p>` : ''}
+        ${a.video || a.statut === 'publie' ? `<p class="petit"><strong>${a.video ? 'Vidéo jointe · ' : ''}${a.statut === 'publie' ? `♥ ${a.jaime} J'aime · ${a.commentaires} commentaire(s)` : ''}</strong>${a.modifie_le ? ' · modifié le ' + heure(a.modifie_le) : ''}</p>` : ''}
         <div class="actions">
           ${a.statut !== 'publie' ? '<button class="btn btn-vert btn-petit" data-a="publier">Publier</button>' : ''}
           ${a.statut === 'en_attente' ? '<button class="btn btn-contour btn-petit" data-a="refuser">Refuser</button>' : ''}
+          <button class="btn btn-contour btn-petit" data-a="modifier">Modifier</button>
+          ${a.statut === 'publie' ? `<button class="btn btn-contour btn-petit" data-a="partager">Partager</button><button class="btn btn-contour btn-petit" data-a="commentaires">Commentaires (${a.commentaires})</button>` : ''}
           <button class="btn btn-contour btn-petit" data-a="supprimer" style="color:var(--rouge)">Supprimer</button>
         </div>
+        <div class="zone-plus" hidden></div>
       </div>`).join('') : '<p class="petit">Aucune activité ici.</p>';
+    activites.forEach(a => actsAdmin[a.id] = a);
   } catch (e) { erreur(e); }
 }
 $('#liste-act').onclick = async e => {
   const b = e.target.closest('[data-a]'); if (!b) return;
-  const id = b.closest('[data-id]').dataset.id, a = b.dataset.a;
+  const bloc = b.closest('[data-id]'), id = bloc.dataset.id, a = b.dataset.a, zone = bloc.querySelector('.zone-plus');
   try {
+    if (a === 'modifier') return commencerEdition(actsAdmin[id]);
+    if (a === 'partager') { zone.innerHTML = boutonsPartage(actsAdmin[id]); zone.hidden = zone.dataset.v === 'p' ? !zone.hidden : false; zone.dataset.v = 'p'; return; }
+    if (a === 'copier') { try { await navigator.clipboard.writeText(lienPartage(id)); commun_toast('Lien copié.'); } catch { prompt('Copiez ce lien :', lienPartage(id)); } return; }
+    if (a === 'commentaires') {
+      const { commentaires } = await A('/admin/commentaires?activite=' + id);
+      zone.innerHTML = commentaires.length ? commentaires.map(c => `<div class="carte" style="padding:10px 12px;margin-top:8px" data-com="${c.id}">
+          <strong>${esc(c.nom)}</strong> <span class="petit">${heure(c.cree_le)}</span><p style="margin:4px 0;white-space:pre-line">${esc(c.texte)}</p>
+          <button class="btn btn-contour btn-petit" data-a="supprimer-com" style="color:var(--rouge)">Supprimer ce commentaire</button></div>`).join('')
+        : '<p class="petit" style="margin-top:8px">Aucun commentaire pour le moment.</p>';
+      zone.hidden = false; zone.dataset.v = 'c'; return;
+    }
+    if (a === 'supprimer-com') { if (!confirm('Supprimer ce commentaire ?')) return;
+      const d = await A('/admin/commentaires/' + b.closest('[data-com]').dataset.com, { method: 'DELETE' }); commun_toast(d.message);
+      b.closest('[data-com]').remove(); return; }
     if (a === 'publier') await A('/admin/activites/' + id, { method: 'PATCH', body: JSON.stringify({ action: 'publier' }) });
     if (a === 'refuser') { const motif = prompt('Motif du refus (le volontaire le verra) :'); if (motif === null) return;
       await A('/admin/activites/' + id, { method: 'PATCH', body: JSON.stringify({ action: 'refuser', motif }) }); }
@@ -389,23 +444,65 @@ $('#liste-act').onclick = async e => {
 };
 
 /* ---------- Publier ---------- */
-let photos = [];
-const dessinerApercus = () => $('#apercus').innerHTML = photos.map((p, i) => `<div><img src="${p}" alt=""><button type="button" data-i="${i}">×</button></div>`).join('');
-$('#apercus').onclick = e => { const b = e.target.closest('button'); if (b) { photos.splice(+b.dataset.i, 1); dessinerApercus(); } };
+let photos = [], edition = null; // edition = { id, garder: [photos gardées], video, retirerVideo } pendant une correction
+const dessinerApercus = () => $('#apercus').innerHTML =
+  (edition ? edition.garder.map((p, i) => `<div><img src="${photo(p, token)}" alt=""><button type="button" data-g="${i}">×</button></div>`).join('') : '') +
+  photos.map((p, i) => `<div><img src="${p}" alt=""><button type="button" data-i="${i}">×</button></div>`).join('');
+$('#apercus').onclick = e => { const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.g !== undefined) edition.garder.splice(+b.dataset.g, 1); else photos.splice(+b.dataset.i, 1); dessinerApercus(); };
 $('#a-photos').onchange = async e => {
-  for (const f of [...e.target.files]) { if (photos.length >= 4) break; try { photos.push(await reduire(f)); } catch {} }
+  for (const f of [...e.target.files]) { if (photos.length + (edition ? edition.garder.length : 0) >= 4) break; try { photos.push(await reduire(f)); } catch {} }
   e.target.value = ''; dessinerApercus();
 };
+const dessinerVideoActuelle = () => {
+  const z = $('#video-actuelle');
+  z.hidden = !(edition && edition.video);
+  if (!z.hidden) z.innerHTML = edition.retirerVideo ? 'La vidéo actuelle sera retirée. <button type="button" class="btn btn-contour btn-petit" data-v="garder">Garder la vidéo</button>'
+    : 'Une vidéo est déjà jointe. Choisissez un fichier pour la remplacer, ou <button type="button" class="btn btn-contour btn-petit" data-v="retirer">Retirer la vidéo</button>';
+};
+$('#video-actuelle').onclick = e => { const b = e.target.closest('[data-v]'); if (b) { edition.retirerVideo = b.dataset.v === 'retirer'; dessinerVideoActuelle(); } };
+function commencerEdition(a) {
+  edition = { id: a.id, garder: [...a.photos], video: a.video, retirerVideo: false };
+  photos = [];
+  $('#a-titre').value = a.titre; $('#a-date').value = a.date_activite || ''; $('#a-lieu').value = a.lieu || ''; $('#a-texte').value = a.texte;
+  $('#a-video').value = '';
+  $('#titre-publier').textContent = 'Modifier la publication';
+  $('#info-publier').textContent = 'Corrigez le texte, les photos ou la vidéo, puis enregistrez. Les « J\'aime » et commentaires sont gardés.';
+  $('#btn-publier').textContent = 'Enregistrer les corrections';
+  $('#annuler-edition').hidden = false;
+  $('#form-publier .alerte').hidden = true;
+  dessinerApercus(); dessinerVideoActuelle();
+  document.querySelector('#onglets button[data-o="publier"]').click();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function finirEdition() {
+  edition = null; photos = [];
+  $('#form-publier').reset();
+  $('#titre-publier').textContent = "Publier une activité (équipe de l'ONGD)";
+  $('#info-publier').textContent = 'Publiée directement sur le site, sans validation.';
+  $('#btn-publier').textContent = 'Publier sur le site';
+  $('#annuler-edition').hidden = true;
+  dessinerApercus(); dessinerVideoActuelle();
+}
+$('#annuler-edition').onclick = () => { finirEdition(); document.querySelector('#onglets button[data-o="activites"]').click(); };
 $('#form-publier').onsubmit = async e => {
   e.preventDefault();
-  const msg = e.target.querySelector('.alerte'), btn = e.target.querySelector('button:not([type=button])');
+  const msg = e.target.querySelector('.alerte'), btn = $('#btn-publier'), fv = $('#a-video').files[0];
   msg.hidden = true; btn.disabled = true;
+  const barre = $('#barre-video'), maj = p => { barre.hidden = false; barre.querySelector('span').style.width = Math.round(p * 100) + '%'; barre.querySelector('em').textContent = 'Envoi de la vidéo : ' + Math.round(p * 100) + ' %'; };
   try {
-    const d = await A('/admin/activites', { method: 'POST', body: JSON.stringify({ titre: $('#a-titre').value, date_activite: $('#a-date').value,
-      lieu: $('#a-lieu').value, texte: $('#a-texte').value, photos }) });
-    message(msg, d.message, 'ok'); e.target.reset(); photos = []; dessinerApercus();
-  } catch (err) { if (err.status === 401) erreur(err); else message(msg, err.message, 'erreur'); }
-  btn.disabled = false;
+    if ($('#a-titre').value.trim().length < 3) throw new Error("Donnez un titre à l'activité.");
+    if ($('#a-texte').value.trim().length < 20) throw new Error("Décrivez l'activité (au moins 20 caractères).");
+    const corps = { titre: $('#a-titre').value, date_activite: $('#a-date').value, lieu: $('#a-lieu').value, texte: $('#a-texte').value, photos };
+    if (fv) { corps.video_cle = await envoyerAuStockage(fv, maj, 'video'); corps.video_nom = fv.name; }
+    let d;
+    if (edition) d = await A('/admin/activites/' + edition.id, { method: 'PUT', body: JSON.stringify({ ...corps, garder: edition.garder, retirer_video: edition.retirerVideo }) });
+    else d = await A('/admin/activites', { method: 'POST', body: JSON.stringify(corps) });
+    const corrige = !!edition;
+    finirEdition(); message(msg, d.message, 'ok');
+    if (corrige) commun_toast(d.message);
+  } catch (err) { if (err.status === 401) erreur(err); else message(msg, err.message === 'réseau' ? 'Envoi interrompu : vérifiez la connexion et réessayez.' : err.message, 'erreur'); }
+  barre.hidden = true; btn.disabled = false;
 };
 
 /* ---------- Volontaires ---------- */
@@ -883,6 +980,18 @@ function envoyerXhr(methode, url, corps, entetes, progression) {
     x.send(corps);
   });
 }
+async function envoyerAuStockage(fichier, maj, genreAttendu) {
+  const p = await A('/admin/fichiers/preparer', { method: 'POST', body: JSON.stringify({ nom: fichier.name, taille: fichier.size, type: fichier.type }) });
+  if (genreAttendu && p.genre !== genreAttendu) throw new Error('Ce fichier n\'est pas une vidéo (MP4, MOV, 3GP, WebM…).');
+  maj(0);
+  try { await envoyerXhr('PUT', p.url_envoi, fichier, { 'Content-Type': p.type }, maj); }
+  catch { // envoi direct impossible : on passe par le serveur
+    maj(0);
+    await envoyerXhr('POST', `${ONGD.api}/admin/fichiers/relais?cle=${encodeURIComponent(p.cle)}&type=${encodeURIComponent(p.type)}`, fichier,
+      { 'Content-Type': 'application/octet-stream', Authorization: 'Bearer ' + token }, maj);
+  }
+  return p.cle;
+}
 $('#form-fichier').onsubmit = async e => {
   e.preventDefault();
   const f = e.target, msg = f.querySelector('.alerte'), btn = f.querySelector('button'), fichier = f.fichier.files[0];
@@ -892,15 +1001,8 @@ $('#form-fichier').onsubmit = async e => {
   btn.disabled = true;
   const barre = $('#barre-envoi'), maj = p => { barre.hidden = false; barre.querySelector('span').style.width = Math.round(p * 100) + '%'; barre.querySelector('em').textContent = Math.round(p * 100) + ' %'; };
   try {
-    const p = await A('/admin/fichiers/preparer', { method: 'POST', body: JSON.stringify({ nom: fichier.name, taille: fichier.size, type: fichier.type }) });
-    maj(0);
-    try { await envoyerXhr('PUT', p.url_envoi, fichier, { 'Content-Type': p.type }, maj); }
-    catch { // envoi direct impossible : on passe par le serveur
-      maj(0);
-      await envoyerXhr('PUT', `${ONGD.api}/admin/fichiers/relais?cle=${encodeURIComponent(p.cle)}&type=${encodeURIComponent(p.type)}`, fichier,
-        { 'Content-Type': 'application/octet-stream', Authorization: 'Bearer ' + token }, maj);
-    }
-    const d = await A('/admin/fichiers', { method: 'POST', body: JSON.stringify({ titre: f.titre.value, description: f.description.value, prix_usd: f.prix_usd.value, cle: p.cle, nom_fichier: fichier.name }) });
+    const cle = await envoyerAuStockage(fichier, maj);
+    const d = await A('/admin/fichiers', { method: 'POST', body: JSON.stringify({ titre: f.titre.value, description: f.description.value, prix_usd: f.prix_usd.value, cle, nom_fichier: fichier.name }) });
     message(msg, d.message, 'ok'); f.reset(); chargerFichiers();
   } catch (err) { if (err.status === 401) erreur(err); else message(msg, err.message === 'réseau' ? 'Envoi interrompu : vérifiez la connexion et réessayez.' : err.message, 'erreur'); }
   barre.hidden = true; btn.disabled = false;
@@ -1070,6 +1172,39 @@ $('#form-admin').onsubmit = async e => {
   } catch (err) { if (err.status === 401) erreur(err); else message(msg, err.message, 'erreur'); }
   btn.disabled = false;
 };
+
+/* ================= Visites ================= */
+let joursVisites = 30;
+const NOMS_PAGES = { 'index.html': 'Accueil', 'formations.html': 'Formations', 'fichiers.html': 'Documents', 'membres.html': 'Membres', 'boutique.html': 'Boutique',
+  'dialogue.html': 'Dialogue', 'direct.html': 'En direct', 'annonces.html': 'Annonces', 'volontaire.html': 'Espace volontaire', 'paiement.html': 'Suivi de paiement' };
+const nomPage = p => { const [f, h] = p.split('#'); return (NOMS_PAGES[f] || f) + (h ? ' › ' + h : ''); };
+$('#periode-visites').onclick = e => { const b = e.target.closest('button'); if (!b) return; joursVisites = +b.dataset.j;
+  document.querySelectorAll('#periode-visites button').forEach(x => x.classList.toggle('actif', x === b)); chargerVisites(); };
+function barres(liste, total, nom = n => n) {
+  return liste.length ? liste.map(x => `<div style="margin:6px 0"><div style="display:flex;justify-content:space-between;gap:8px"><span>${esc(nom(x.nom))}</span><span class="petit">${x.visiteurs} visiteur(s) · ${x.vues} vue(s)</span></div>
+    <div class="progression" style="margin:3px 0 0;height:8px"><span style="width:${total ? Math.max(2, Math.round(x.vues / total * 100)) : 0}%"></span></div></div>`).join('') : '<p class="petit">Pas encore de données.</p>';
+}
+async function chargerVisites() {
+  try {
+    const d = await A('/admin/visites?jours=' + joursVisites), t = d.totaux;
+    $('#en-ligne').innerHTML = `<span class="point-rouge" style="background:var(--vert);display:inline-block;vertical-align:middle"></span> ${d.en_ligne} personne(s) sur le site en ce moment`;
+    $('#totaux-visites').innerHTML = [[t.visiteurs_jour, 'visiteurs aujourd\'hui', t.vues_jour + ' vues'], [t.visiteurs_7j, 'visiteurs sur 7 jours', t.vues_7j + ' vues'],
+      [t.visiteurs_periode, 'visiteurs sur ' + (d.jours === 365 ? '1 an' : d.jours + ' jours'), t.vues_periode + ' vues'], [t.vues_total, 'vues depuis le début', '']]
+      .map(([n, l, s]) => `<div><strong>${n.toLocaleString('fr-FR')}</strong><span class="petit">${l}${s ? ' · ' + s : ''}</span></div>`).join('');
+    // Graphique : un bâton par jour (jours sans visite compris)
+    const parJour = new Map(d.par_jour.map(x => [x.jour, x])), jours = [];
+    for (let i = d.jours - 1; i >= 0; i--) { const dt = new Date(Date.now() - i * 86400000); jours.push(dt.toLocaleDateString('en-CA', { timeZone: 'Africa/Kinshasa' })); }
+    const max = Math.max(1, ...d.par_jour.map(x => x.visiteurs));
+    $('#graphe-visites').innerHTML = jours.map(j => { const x = parJour.get(j) || { visiteurs: 0, vues: 0 };
+      return `<div class="baton" title="${new Date(j + 'T12:00').toLocaleDateString('fr-FR')} : ${x.visiteurs} visiteur(s), ${x.vues} vue(s)"><span style="height:${Math.round(x.visiteurs / max * 100)}%"></span></div>`; }).join('')
+      + `<div class="graphe-legende"><span>${new Date(jours[0] + 'T12:00').toLocaleDateString('fr-FR')}</span><span>max ${max} / jour</span><span>aujourd'hui</span></div>`;
+    const tot = t.vues_periode;
+    $('#top-pages').innerHTML = barres(d.pages, tot, nomPage);
+    $('#top-sources').innerHTML = barres(d.sources, tot, n => n === 'Direct' ? 'Direct (lien partagé, favori, adresse tapée)' : n);
+    $('#top-regions').innerHTML = barres(d.regions, tot);
+    $('#top-appareils').innerHTML = barres(d.appareils, tot);
+  } catch (e) { erreur(e); }
+}
 
 function demarrer() { montrer(true); appliquerRoles(); }
 if (token) demarrer(); else montrer(false);

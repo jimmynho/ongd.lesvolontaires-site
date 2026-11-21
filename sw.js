@@ -1,7 +1,7 @@
 /* ONGD Les Volontaires — fonctionnement hors réseau
    Les pages s'ouvrent même sans réseau (dernière version enregistrée sur le téléphone).
    Changez le numéro de VERSION à chaque mise à jour du site pour rafraîchir les téléphones. */
-const VERSION = 'ongd-v13';
+const VERSION = 'ongd-v14';
 const PAGES = ['./', 'index.html', 'formations.html', 'boutique.html', 'dialogue.html', 'direct.html', 'annonces.html', 'paiement.html',
   'volontaire.html', 'fichiers.html', 'membres.html', 'style.css', 'config.js', 'commun.js', 'logo.svg', 'logo-officiel.jpg', 'bienvenue.jpg', 'icone-192.png', 'icone-512.png', 'manifest.webmanifest'];
 // Données publiques gardées pour la lecture hors réseau
@@ -15,6 +15,7 @@ self.addEventListener('fetch', e => {
   const req = e.request, url = new URL(req.url);
   if (req.method !== 'GET' || req.headers.has('Authorization') || url.search.includes('t=')) return; // rien de privé dans le cache
   if (url.pathname.endsWith('admin.html')) return;
+  if (/\/activites\/\d+\/(video|interactions)$/.test(url.pathname)) return; // vidéos et commentaires : toujours en direct
   if (API_PUBLIQUE.test(url.pathname)) {
     // Réseau d'abord, sinon la dernière réponse enregistrée
     e.respondWith(fetch(req).then(rep => {

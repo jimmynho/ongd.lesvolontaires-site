@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://eajimmy-production.up.railway.app; connect-src 'self' https://eajimmy-production.up.railway.app; frame-src https://www.youtube.com https://www.youtube-nocookie.com; base-uri 'self'; form-action 'self'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://eajimmy-production.up.railway.app; connect-src 'self' https://eajimmy-production.up.railway.app; media-src 'self' https://eajimmy-production.up.railway.app https://*.backblazeb2.com; frame-src https://www.youtube.com https://www.youtube-nocookie.com; base-uri 'self'; form-action 'self'; object-src 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ONGD Les Volontaires — Mbandaka, RD Congo | Électricité, jeunesse, éducation</title>
 <meta name="description" content="ONGD Les Volontaires, Mbandaka (Équateur, RD Congo) : 12 domaines d'intervention avec l'électricité au cœur — jeunesse et numérique, entreprises locales, eau et énergie, santé, éducation. Faites un don, devenez partenaire, membre ou volontaire.">
@@ -422,6 +422,8 @@ api('/stats').then(s => {
 
 /* ---------- Activités ---------- */
 let page = 1; const cache = {};
+const ICONE_VIDEO = '<span class="lecture" aria-label="Vidéo"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>';
+const compteurs = a => (a.jaime || a.commentaires) ? `<div class="compteurs">${a.jaime ? `♥ ${a.jaime}` : ''}${a.jaime && a.commentaires ? ' · ' : ''}${a.commentaires ? `${a.commentaires} commentaire${a.commentaires > 1 ? 's' : ''}` : ''}</div>` : '';
 async function chargerActivites() {
   const liste = $('#liste-activites');
   try {
@@ -431,11 +433,12 @@ async function chargerActivites() {
     if (page === 1) alaUne(d.activites.slice(0, 3));
     liste.insertAdjacentHTML('beforeend', d.activites.map(a => `
       <button class="carte activite" data-id="${a.id}">
-        <div class="image" style="${a.photos.length ? `background-image:url('${photo(a.photos[0])}')` : ''}">${a.photos.length > 1 ? `<span class="nb">${a.photos.length} photos</span>` : ''}</div>
+        <div class="image${!a.photos.length && a.video ? ' sans-photo' : ''}" style="${a.photos.length ? `background-image:url('${photo(a.photos[0])}')` : ''}">${a.video ? ICONE_VIDEO : ''}${a.photos.length > 1 ? `<span class="nb">${a.photos.length} photos</span>` : ''}</div>
         <div class="corps">
           <div class="meta">${esc(date(a.date_activite || a.publie_le))}${a.lieu ? ' · ' + esc(a.lieu) : ''}</div>
           <h3>${esc(a.titre)}</h3>
           <p>${esc(a.texte)}</p>
+          ${compteurs(a)}
         </div>
       </button>`).join(''));
     $('#plus-activites').hidden = !d.suite;
@@ -450,11 +453,12 @@ function alaUne(l) {
   const piste = $('#une-piste'), points = $('#une-points');
   piste.innerHTML = l.map(a => `
     <button class="carte activite une-carte" data-id="${a.id}">
-      <div class="image" style="${a.photos.length ? `background-image:url('${photo(a.photos[0])}')` : ''}"></div>
+      <div class="image${!a.photos.length && a.video ? ' sans-photo' : ''}" style="${a.photos.length ? `background-image:url('${photo(a.photos[0])}')` : ''}">${a.video ? ICONE_VIDEO : ''}</div>
       <div class="corps">
         <div class="meta">${esc(date(a.date_activite || a.publie_le))}${a.lieu ? ' · ' + esc(a.lieu) : ''}</div>
         <h3>${esc(a.titre)}</h3>
         <p>${esc(a.texte)}</p>
+        ${compteurs(a)}
       </div>
     </button>`).join('');
   points.innerHTML = l.length > 1 ? l.map((_, i) => `<button aria-label="Publication ${i + 1}"></button>`).join('') : '';
@@ -472,17 +476,117 @@ function alaUne(l) {
     i = proche; marquer(); }, 120); }, { passive: true });
   setInterval(() => { if (pause || document.hidden || $('#dlg-activite').open) return; if (piste.scrollWidth <= piste.clientWidth + 4) return; aller(i + 1); }, 4500);
 }
-$('#une-piste').onclick = $('#liste-activites').onclick = e => {
-  const c = e.target.closest('[data-id]'); if (!c) return;
-  const a = cache[c.dataset.id];
+/* ---------- Une publication entière : vidéo, photos, J'aime, commentaires, partage ---------- */
+const SVG = {
+  coeur: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.3 3 4.5 6.8 4.5c2.1 0 3.6 1.1 5.2 3 1.6-1.9 3.1-3 5.2-3 3.8 0 5.9 3.8 4.4 7.3C19.5 16.4 12 21 12 21z"/></svg>',
+  bulle: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>',
+  partage: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>',
+};
+const visiteur = (() => { // numéro tiré au hasard, gardé sur le téléphone : sert seulement à compter les « J'aime »
+  let v = outils.lire('ongd-visiteur');
+  if (!v || !/^[A-Za-z0-9_-]{16,64}$/.test(v)) { v = Array.from(crypto.getRandomValues(new Uint8Array(18)), b => 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_'[b % 64]).join(''); outils.ecrire('ongd-visiteur', v); }
+  return v;
+})();
+const lienPartage = a => ONGD.api + '/partage/' + a.id;   // aperçu avec la photo sur Facebook et WhatsApp
+const lienSite = a => location.origin + location.pathname + '?p=' + a.id;
+function boutonsPartage(a) {
+  const u = encodeURIComponent(lienPartage(a)), t = encodeURIComponent(a.titre + ' — ONGD Les Volontaires');
+  return `
+    <a class="rs fb" target="_blank" rel="noopener" href="https://www.facebook.com/sharer/sharer.php?u=${u}">Facebook</a>
+    <a class="rs wa" target="_blank" rel="noopener" href="https://wa.me/?text=${t}%20${u}">WhatsApp</a>
+    <a class="rs tg" target="_blank" rel="noopener" href="https://t.me/share/url?url=${u}&text=${t}">Telegram</a>
+    <a class="rs x" target="_blank" rel="noopener" href="https://twitter.com/intent/tweet?url=${u}&text=${t}">X (Twitter)</a>
+    <a class="rs in" target="_blank" rel="noopener" href="https://www.linkedin.com/sharing/share-offsite/?url=${u}">LinkedIn</a>
+    <button type="button" class="rs copier" data-copier>Copier le lien</button>
+    ${navigator.share ? '<button type="button" class="rs autre" data-natif>Autres applications…</button>' : ''}`;
+}
+function ouvrirPublication(a) {
   $('#dlg-contenu').innerHTML = `
     <div class="meta" style="color:var(--soleil-fonce);font-weight:700">${esc(date(a.date_activite || a.publie_le))}${a.lieu ? ' · ' + esc(a.lieu) : ''}</div>
     <h2>${esc(a.titre)}</h2>
-    <p class="petit">Publié par ${esc(a.auteur)}</p>
+    <p class="petit">Publié par ${esc(a.auteur)}${a.modifie_le ? ' · modifié le ' + esc(date(a.modifie_le)) : ''}</p>
+    ${a.video ? `<video class="video-pub" controls playsinline preload="metadata" src="${ONGD.api}/activites/${a.id}/video"${a.photos.length ? ` poster="${photo(a.photos[0])}"` : ''}></video>` : ''}
     <p class="texte-long">${esc(a.texte)}</p>
-    <div class="galerie">${a.photos.map(p => `<img src="${photo(p)}" alt="" loading="lazy">`).join('')}</div>`;
-  $('#dlg-activite').showModal();
+    <div class="galerie">${a.photos.map(p => `<img src="${photo(p)}" alt="" loading="lazy">`).join('')}</div>
+    <div class="resume-react" id="resume-react"></div>
+    <div class="reactions">
+      <button type="button" class="react" id="btn-jaime" aria-pressed="false">${SVG.coeur}<span>J'aime</span></button>
+      <button type="button" class="react" id="btn-commenter">${SVG.bulle}<span>Commenter</span></button>
+      <button type="button" class="react" id="btn-partager">${SVG.partage}<span>Partager</span></button>
+    </div>
+    <div class="partage" id="zone-partage" hidden>${boutonsPartage(a)}</div>
+    <div class="commentaires">
+      <h3>Commentaires</h3>
+      <div id="liste-com"><p class="petit">Chargement…</p></div>
+      <form id="form-com" novalidate>
+        <input name="nom" maxlength="60" placeholder="Votre nom" autocomplete="name" required>
+        <textarea name="texte" maxlength="1000" rows="3" placeholder="Votre commentaire" required></textarea>
+        <input name="site_web" tabindex="-1" autocomplete="off" class="pot" aria-hidden="true">
+        <button class="btn btn-vert">Publier le commentaire</button>
+        <div class="alerte" hidden></div>
+      </form>
+    </div>`;
+  const dlg = $('#dlg-activite');
+  if (!dlg.open) dlg.showModal();
+  dlg.scrollTop = 0;
+  history.replaceState(null, '', '?p=' + a.id + location.hash);
+  const resume = () => $('#resume-react').textContent = [a.jaime ? `♥ ${a.jaime} J'aime` : '', a.commentaires ? `${a.commentaires} commentaire${a.commentaires > 1 ? 's' : ''}` : ''].filter(Boolean).join(' · ');
+  resume();
+  const nomGarde = outils.lire('ongd-nom-commentaire'); if (nomGarde) $('#form-com').nom.value = nomGarde;
+
+  const dessinerCom = l => $('#liste-com').innerHTML = l.length
+    ? l.map(c => `<div class="com"><strong>${esc(c.nom)}</strong> <span class="petit">${esc(date(c.cree_le))}</span><p>${esc(c.texte)}</p></div>`).join('')
+    : '<p class="petit">Soyez le premier à commenter.</p>';
+  let commentaires = [];
+  api(`/activites/${a.id}/interactions?v=${visiteur}`).then(d => {
+    commentaires = d.commentaires; dessinerCom(commentaires);
+    a.jaime = d.jaime; a.commentaires = d.commentaires.length; resume();
+    $('#btn-jaime').setAttribute('aria-pressed', d.moi);
+  }).catch(() => $('#liste-com').innerHTML = '<p class="petit">Commentaires indisponibles pour le moment.</p>');
+
+  $('#btn-jaime').onclick = async () => {
+    const b = $('#btn-jaime'); b.disabled = true;
+    try { const d = await api(`/activites/${a.id}/jaime`, { method: 'POST', body: JSON.stringify({ v: visiteur }) });
+      b.setAttribute('aria-pressed', d.moi); a.jaime = d.jaime; resume(); }
+    catch (e) { commun.toast(e.message); }
+    b.disabled = false;
+  };
+  $('#btn-commenter').onclick = () => { $('#form-com').scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => $('#form-com').texte.focus(), 350); };
+  $('#btn-partager').onclick = () => { const z = $('#zone-partage'); z.hidden = !z.hidden; };
+  $('#zone-partage').onclick = async e => {
+    if (e.target.closest('[data-copier]')) {
+      try { await navigator.clipboard.writeText(lienSite(a)); commun.toast('Lien copié : collez-le où vous voulez.'); }
+      catch { prompt('Copiez ce lien :', lienSite(a)); }
+    }
+    if (e.target.closest('[data-natif]')) navigator.share({ title: a.titre, text: a.titre + ' — ONGD Les Volontaires', url: lienSite(a) }).catch(() => {});
+  };
+  $('#form-com').onsubmit = async e => {
+    e.preventDefault();
+    const f = e.target, msg = f.querySelector('.alerte'), btn = f.querySelector('button');
+    msg.hidden = true; btn.disabled = true;
+    try {
+      const d = await api(`/activites/${a.id}/commentaires`, { method: 'POST', body: JSON.stringify({ nom: f.nom.value, texte: f.texte.value, site_web: f.site_web.value }) });
+      if (d.commentaire) { commentaires.push(d.commentaire); dessinerCom(commentaires); a.commentaires = commentaires.length; resume(); }
+      outils.ecrire('ongd-nom-commentaire', f.nom.value.trim()); f.texte.value = '';
+      message(msg, d.message, 'ok');
+    } catch (err) { message(msg, err.message, 'erreur'); }
+    btn.disabled = false;
+  };
+}
+$('#dlg-activite').addEventListener('close', () => {
+  const v = $('#dlg-contenu video'); if (v) v.pause();
+  if (new URLSearchParams(location.search).has('p')) history.replaceState(null, '', location.pathname + location.hash);
+});
+$('#une-piste').onclick = $('#liste-activites').onclick = e => {
+  const c = e.target.closest('[data-id]'); if (!c) return;
+  ouvrirPublication(cache[c.dataset.id]);
 };
+// Lien partagé (…/?p=12) : la publication s'ouvre directement
+(() => {
+  const id = parseInt(new URLSearchParams(location.search).get('p'), 10);
+  if (id > 0) api('/activites/' + id).then(d => { cache[id] = d.activite; ouvrirPublication(d.activite); })
+    .catch(e => commun.toast(e.message));
+})();
 chargerActivites();
 
 /* ---------- Dons ---------- */
