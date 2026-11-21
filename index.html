@@ -132,6 +132,7 @@
       <div><strong id="nb-activites">—</strong><span>activités publiées</span></div>
       <div><strong id="nb-volontaires">—</strong><span>volontaires actifs</span></div>
       <div id="bloc-dons" hidden><strong id="total-dons">—</strong><span>de dons reçus</span></div>
+      <div id="bloc-visites" hidden><strong id="nb-visites">—</strong><span>visites du site</span></div>
     </div>
   </div>
 
@@ -158,7 +159,8 @@
       <span class="sur-titre">Nos domaines d'intervention</span>
       <h2>12 domaines, l'électricité au cœur</h2>
       <p class="intro">L'électricité éclaire tout le reste : l'école, la santé, l'entreprise, l'eau et l'innovation. C'est le centre de notre action.</p>
-      <div class="grille-3" id="domaines" style="margin-top:22px"></div>
+      <div class="defile-piste" id="domaines" style="margin-top:22px"></div>
+      <div class="une-points" id="domaines-points"></div>
       <a class="affiche" href="affiche-ongd.jpg" target="_blank" rel="noopener">
         <img src="affiche-ongd.jpg" alt="Affiche des 12 domaines d'intervention de l'ONGD Les Volontaires" width="2289" height="1024" loading="lazy">
         <span>Voir l'affiche en grand</span>
@@ -407,7 +409,29 @@ $('#lien-wa').href = wa; $('#lien-wa').textContent = ONGD.telephoneAffiche; $('#
 if (ONGD.email) { $('#dt-email').hidden = $('#dd-email').hidden = false; $('#dd-email').innerHTML = `<a href="mailto:${esc(ONGD.email)}">${esc(ONGD.email)}</a>`; }
 if (ONGD.facebook) { $('#lien-fb').hidden = false; $('#lien-fb a').href = ONGD.facebook; }
 $('#lien-plaquette').href = ONGD.plaquette;
-$('#domaines').innerHTML = ONGD.domaines.map((d, i) => `<div class="carte domaine${d.centre ? ' centre' : ''}"><span class="num-domaine">${String(i + 1).padStart(2, '0')}</span>${d.centre ? '<span class="etiquette or">Au cœur de notre action</span>' : ''}<h3>${esc(d.titre)}</h3><p>${esc(d.texte)}</p></div>`).join('');
+$('#domaines').innerHTML = ONGD.domaines.map((d, i) => ({ d, i })).sort((x, y) => (y.d.centre ? 1 : 0) - (x.d.centre ? 1 : 0)).map(({ d, i }) => `<div class="carte domaine${d.centre ? ' centre' : ''}"><span class="num-domaine">${String(i + 1).padStart(2, '0')}</span>${d.centre ? '<span class="etiquette or">Au cœur de notre action</span>' : ''}<h3>${esc(d.titre)}</h3><p>${esc(d.texte)}</p></div>`).join('');
+/* Les domaines défilent tout seuls (la carte suivante arrive par la droite) ; un toucher met en pause */
+function defiler(piste, points, delai) {
+  const cartes = [...piste.children]; if (cartes.length < 2) return;
+  points.innerHTML = cartes.map((_, k) => `<button aria-label="Domaine ${k + 1}"></button>`).join('');
+  const boutons = [...points.children];
+  let i = 0, pause = false, attente;
+  const marquer = () => boutons.forEach((b, k) => b.classList.toggle('actif', k === i));
+  const aller = n => { i = (n + cartes.length) % cartes.length; piste.scrollTo({ left: cartes[i].offsetLeft - piste.offsetLeft, behavior: 'smooth' }); marquer(); };
+  boutons.forEach((b, k) => b.onclick = () => aller(k));
+  ['pointerdown', 'touchstart', 'mouseenter', 'focusin'].forEach(ev => piste.addEventListener(ev, () => pause = true, { passive: true }));
+  ['pointerup', 'touchend', 'mouseleave', 'focusout'].forEach(ev => piste.addEventListener(ev, () => setTimeout(() => pause = false, 3000), { passive: true }));
+  piste.addEventListener('scroll', () => { clearTimeout(attente); attente = setTimeout(() => {
+    const x = piste.scrollLeft; i = cartes.reduce((m, c, k) => Math.abs(c.offsetLeft - piste.offsetLeft - x) < Math.abs(cartes[m].offsetLeft - piste.offsetLeft - x) ? k : m, 0); marquer(); }, 120); }, { passive: true });
+  marquer();
+  setInterval(() => {
+    if (pause || document.hidden || document.querySelector('dialog[open]')) return;
+    const r = piste.getBoundingClientRect(); if (r.bottom < 0 || r.top > innerHeight) return; // seulement quand on la voit
+    if (piste.scrollWidth <= piste.clientWidth + 4) return;
+    aller(piste.scrollLeft + piste.clientWidth >= piste.scrollWidth - 4 ? 0 : i + 1);
+  }, delai);
+}
+defiler($('#domaines'), $('#domaines-points'), 3500);
 
 /* ---------- Menu mobile ---------- */
 $('#burger').onclick = () => { const o = $('#tiroir').classList.toggle('ouvert'); $('#burger').setAttribute('aria-expanded', o); };
@@ -417,6 +441,7 @@ document.querySelectorAll('#tiroir a').forEach(a => a.onclick = () => $('#tiroir
 api('/stats').then(s => {
   $('#nb-activites').textContent = s.activites;
   $('#nb-volontaires').textContent = s.volontaires;
+  if (s.visites) { $('#bloc-visites').hidden = false; $('#nb-visites').textContent = Number(s.visites).toLocaleString('fr-FR'); }
   if (s.dons.length) { $('#bloc-dons').hidden = false; $('#total-dons').textContent = s.dons.map(d => montant(d.total, d.devise)).join(' · '); }
 }).catch(() => {});
 
@@ -487,17 +512,19 @@ const visiteur = (() => { // numéro tiré au hasard, gardé sur le téléphone 
   if (!v || !/^[A-Za-z0-9_-]{16,64}$/.test(v)) { v = Array.from(crypto.getRandomValues(new Uint8Array(18)), b => 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_'[b % 64]).join(''); outils.ecrire('ongd-visiteur', v); }
   return v;
 })();
-const lienPartage = a => ONGD.api + '/partage/' + a.id;   // aperçu avec la photo sur Facebook et WhatsApp
-const lienSite = a => location.origin + location.pathname + '?p=' + a.id;
+// Lien partagé : aperçu avec la photo, le titre et le texte sur Facebook et WhatsApp, puis ouverture de la publication sur le site
+const lienPartage = id => (ONGD.partage || ONGD.api + '/partage/') + id;
+// Texte prêt à coller sur Facebook (Facebook ne permet pas de le remplir à votre place)
+const textePartage = a => `${a.titre}\n\n${a.texte.length > 300 ? a.texte.slice(0, 300).replace(/\s+\S*$/, '') + '…' : a.texte}\n\n👉 Lire la suite, aimer et commenter : ${lienPartage(a.id ?? a)}`;
 function boutonsPartage(a) {
-  const u = encodeURIComponent(lienPartage(a)), t = encodeURIComponent(a.titre + ' — ONGD Les Volontaires');
+  const u = encodeURIComponent(lienPartage(a.id)), t = encodeURIComponent(a.titre + ' — ONGD Les Volontaires');
   return `
-    <a class="rs fb" target="_blank" rel="noopener" href="https://www.facebook.com/sharer/sharer.php?u=${u}">Facebook</a>
-    <a class="rs wa" target="_blank" rel="noopener" href="https://wa.me/?text=${t}%20${u}">WhatsApp</a>
+    <a class="rs fb" target="_blank" rel="noopener" data-fb href="https://www.facebook.com/sharer/sharer.php?u=${u}">Facebook</a>
+    <a class="rs wa" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(textePartage(a))}">WhatsApp</a>
     <a class="rs tg" target="_blank" rel="noopener" href="https://t.me/share/url?url=${u}&text=${t}">Telegram</a>
     <a class="rs x" target="_blank" rel="noopener" href="https://twitter.com/intent/tweet?url=${u}&text=${t}">X (Twitter)</a>
     <a class="rs in" target="_blank" rel="noopener" href="https://www.linkedin.com/sharing/share-offsite/?url=${u}">LinkedIn</a>
-    <button type="button" class="rs copier" data-copier>Copier le lien</button>
+    <button type="button" class="rs copier" data-copier>Copier le texte et le lien</button>
     ${navigator.share ? '<button type="button" class="rs autre" data-natif>Autres applications…</button>' : ''}`;
 }
 function ouvrirPublication(a) {
@@ -554,11 +581,14 @@ function ouvrirPublication(a) {
   $('#btn-commenter').onclick = () => { $('#form-com').scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => $('#form-com').texte.focus(), 350); };
   $('#btn-partager').onclick = () => { const z = $('#zone-partage'); z.hidden = !z.hidden; };
   $('#zone-partage').onclick = async e => {
-    if (e.target.closest('[data-copier]')) {
-      try { await navigator.clipboard.writeText(lienSite(a)); commun.toast('Lien copié : collez-le où vous voulez.'); }
-      catch { prompt('Copiez ce lien :', lienSite(a)); }
+    if (e.target.closest('[data-fb]')) { // le texte est copié : il suffit de le coller au-dessus de l'aperçu
+      try { await navigator.clipboard.writeText(textePartage(a)); commun.toast('Texte copié : sur Facebook, appuyez dans « Dites quelque chose » et collez-le.'); } catch {}
     }
-    if (e.target.closest('[data-natif]')) navigator.share({ title: a.titre, text: a.titre + ' — ONGD Les Volontaires', url: lienSite(a) }).catch(() => {});
+    if (e.target.closest('[data-copier]')) {
+      try { await navigator.clipboard.writeText(textePartage(a)); commun.toast('Texte et lien copiés : collez-les où vous voulez.'); }
+      catch { prompt('Copiez ce lien :', lienPartage(a.id)); }
+    }
+    if (e.target.closest('[data-natif]')) navigator.share({ title: a.titre, text: textePartage(a).replace(/\n\n👉[^]*$/, ''), url: lienPartage(a.id) }).catch(() => {});
   };
   $('#form-com').onsubmit = async e => {
     e.preventDefault();

@@ -10,6 +10,8 @@ window.ONGD = {
 
   // Adresse du serveur Eaji (Railway) — ne pas changer sauf si le serveur change
   api: 'https://eajimmy-production.up.railway.app/api/ongd',
+  // Liens partagés sur Facebook, WhatsApp… : l'adresse du site, qui ouvre directement la publication
+  partage: 'https://ongdlesvolontaires.eaji.org/?p=',
 
   slogan: 'Ensemble, nous pouvons transformer notre société !',
 
