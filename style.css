@@ -341,3 +341,29 @@ input:focus, select:focus, textarea:focus { outline: 3px solid rgba(229,154,47,.
 .bandeau-visites { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; width: 100%; margin: 0 0 12px; padding: 12px 14px; border: 1px solid var(--ligne); border-radius: 12px; background: var(--vert-pale); color: var(--vert-fonce); font: inherit; font-size: .9rem; text-align: left; cursor: pointer; }
 .bandeau-visites strong { font-size: 1.1rem; }
 .bandeau-visites em { margin-left: auto; font-style: normal; font-weight: 700; }
+
+/* Publication en plein écran */
+#dlg-activite.plein-ecran { width: 100%; max-width: 100%; height: 100%; max-height: 100%; margin: 0; border-radius: 0; box-shadow: none; }
+#dlg-activite.plein-ecran .dlg-corps { max-width: 720px; margin: 0 auto; padding: 8px 18px 40px; }
+#dlg-activite.plein-ecran .dlg-fermer { position: sticky; top: 10px; }
+/* Photos en mosaïque (comme sur Facebook) */
+.mosaique { display: grid; gap: 4px; border-radius: 10px; overflow: hidden; margin: 14px 0 4px; }
+.mosaique button { position: relative; display: block; padding: 0; border: 0; background: var(--vert-pale); cursor: zoom-in; overflow: hidden; min-height: 0; }
+.mosaique img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.mosaique.m1 button { aspect-ratio: 4 / 3; }
+.mosaique.m2 { grid-template-columns: 1fr 1fr; }
+.mosaique.m2 button { aspect-ratio: 1; }
+.mosaique.m3 { grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; aspect-ratio: 4 / 3; }
+.mosaique.m3 button:first-child { grid-row: 1 / 3; }
+.mosaique.m4 { grid-template-columns: 1fr 1fr; }
+.mosaique.m4 button { aspect-ratio: 1; }
+.mosaique .plus { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(0,0,0,.45); color: #fff; font-size: 2rem; font-weight: 700; }
+/* Visionneuse de photos */
+.visionneuse { width: 100%; max-width: 100%; height: 100%; max-height: 100%; margin: 0; border-radius: 0; background: #000; padding: 0; }
+.visionneuse::backdrop { background: #000; }
+.visionneuse img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; touch-action: pan-y; }
+.visionneuse .nav, .visionneuse .fermer-photo { position: absolute; z-index: 2; border: 0; background: rgba(255,255,255,.16); color: #fff; width: 46px; height: 46px; border-radius: 50%; font-size: 1.9rem; line-height: 1; cursor: pointer; }
+.visionneuse .fermer-photo { top: 12px; right: 12px; font-size: 1.6rem; }
+.visionneuse .prec { left: 10px; top: 50%; transform: translateY(-50%); }
+.visionneuse .suiv { right: 10px; top: 50%; transform: translateY(-50%); }
+.visionneuse .compte { position: absolute; bottom: 18px; left: 0; right: 0; text-align: center; color: #fff; font-weight: 700; font-size: .95rem; }
